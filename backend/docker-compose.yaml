@@ -1,0 +1,11 @@
+version: "3"
+services:
+  db:
+    image: mongo:4.4
+    container_name: db
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_DATABASE: packlister
+    volumes:
+      - ./db/mongo.init:/docker-entrypoint-initdb.d/mongo-init.js

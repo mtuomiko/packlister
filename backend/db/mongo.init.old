@@ -1,0 +1,5 @@
+db.packlists.insert({
+    "slug": "asdf",
+    "name": "Test packlist",
+    "description": "Automatically generated packlist"
+});

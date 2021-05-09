@@ -1,0 +1,14 @@
+type Packlist {
+  id: ID!
+  slug: String!
+  name: String!
+  description: String
+  user: User!
+}
+
+input NewPacklist {
+  slug: String!
+  name: String!
+  description: String
+  user: ID!
+}

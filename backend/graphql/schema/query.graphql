@@ -1,0 +1,6 @@
+type Query {
+  allPacklists: [Packlist!]!
+  findPacklist(id: ID!): Packlist
+  allUsers: [User!]!
+  findUser(id: ID!): User
+}

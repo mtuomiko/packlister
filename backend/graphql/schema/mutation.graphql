@@ -1,0 +1,5 @@
+type Mutation {
+  createPacklist(input: NewPacklist!): Packlist
+  createUser(input: NewUser!): User
+  login(input: LoginInput): Token
+}

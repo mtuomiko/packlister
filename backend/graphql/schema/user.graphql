@@ -1,0 +1,22 @@
+type User {
+  id: ID!
+  username: String!
+  email: String!
+  # passwordHash: String!
+  packlists: [Packlist!]!
+}
+
+input NewUser {
+  username: String!
+  email: String!
+  password: String!
+}
+
+type Token {
+  value: String!
+}
+
+input LoginInput {
+  username: String!
+  password: String!
+}
