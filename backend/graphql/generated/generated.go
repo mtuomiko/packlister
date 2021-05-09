@@ -337,7 +337,6 @@ input NewPacklist {
   slug: String!
   name: String!
   description: String
-  user: ID!
 }`, BuiltIn: false},
 	{Name: "graphql/schema/query.graphql", Input: `type Query {
   allPacklists: [Packlist!]!
@@ -2327,14 +2326,6 @@ func (ec *executionContext) unmarshalInputNewPacklist(ctx context.Context, obj i
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			it.Description, err = ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "user":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("user"))
-			it.User, err = ec.unmarshalNID2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, v)
 			if err != nil {
 				return it, err
 			}

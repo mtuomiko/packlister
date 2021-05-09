@@ -10,5 +10,4 @@ input NewPacklist {
   slug: String!
   name: String!
   description: String
-  user: ID!
 }

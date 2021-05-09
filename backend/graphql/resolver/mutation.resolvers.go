@@ -7,13 +7,36 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/mtuomiko/packlister/auth"
 	"github.com/mtuomiko/packlister/graphql/generated"
 	"github.com/mtuomiko/packlister/graphql/model"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func (r *mutationResolver) CreatePacklist(ctx context.Context, input model.NewPacklist) (*model.Packlist, error) {
-	return r.DB.CreatePacklist(input)
+	gc, err := GinContextFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	raw, ok := gc.Get("claims")
+	if !ok {
+		return nil, fmt.Errorf("auth failed")
+	}
+	claims, ok := raw.(*auth.JwtClaim)
+	if !ok {
+		return nil, fmt.Errorf("auth failed")
+	}
+	user, err := r.DB.FindUserByUsername(claims.Username)
+	if err != nil {
+		return nil, fmt.Errorf("auth failed")
+	}
+	packlist := model.Packlist{
+		Slug:        input.Slug,
+		Name:        input.Name,
+		Description: input.Description,
+		UserID:      user.ID,
+	}
+	return r.DB.CreatePacklist(packlist)
 }
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {

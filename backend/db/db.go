@@ -12,7 +12,7 @@ import (
 
 type DB interface {
 	GetAllPacklists() ([]*model.Packlist, error)
-	CreatePacklist(input model.NewPacklist) (*model.Packlist, error)
+	CreatePacklist(input model.Packlist) (*model.Packlist, error)
 	FindOnePacklist(objectId primitive.ObjectID) (*model.Packlist, error)
 	GetAllUsers() ([]*model.User, error)
 	FindOneUser(objectId primitive.ObjectID) (*model.User, error)
@@ -48,12 +48,12 @@ func (db MongoDB) GetAllPacklists() ([]*model.Packlist, error) {
 	return packlists, nil
 }
 
-func (db MongoDB) CreatePacklist(input model.NewPacklist) (*model.Packlist, error) {
+func (db MongoDB) CreatePacklist(input model.Packlist) (*model.Packlist, error) {
 	insertResult, err := db.packlists.InsertOne(context.TODO(), bson.D{
 		{Key: "slug", Value: input.Slug},
 		{Key: "name", Value: input.Name},
 		{Key: "description", Value: input.Description},
-		{Key: "user", Value: input.User},
+		{Key: "user", Value: input.UserID},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error inserting packlist")

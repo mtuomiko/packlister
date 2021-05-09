@@ -2,10 +2,13 @@ package auth
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
-	"github.com/mtuomiko/packlister/graphql/model"
+	"github.com/gin-gonic/gin"
 	jwt "gopkg.in/dgrijalva/jwt-go.v3"
+
+	"github.com/mtuomiko/packlister/graphql/model"
 )
 
 type JwtWrapper struct {
@@ -55,4 +58,22 @@ func (j *JwtWrapper) ValidateToken(signedToken string) (claims *JwtClaim, err er
 		return nil, fmt.Errorf("token is expired")
 	}
 	return claims, nil
+}
+
+func AuthMiddleware(jwt JwtWrapper) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		auth := c.GetHeader("Authorization")
+		if auth == "" {
+			return
+		}
+		if !strings.HasPrefix(strings.ToLower(auth), "bearer ") {
+			return
+		}
+		claims, err := jwt.ValidateToken(auth[7:])
+		if err != nil {
+			return
+		}
+		c.Set("claims", claims)
+		c.Next()
+	}
 }

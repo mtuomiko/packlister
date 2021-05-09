@@ -2,15 +2,10 @@
 
 package model
 
-import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
-)
-
 type NewPacklist struct {
-	Slug        string             `json:"slug"`
-	Name        string             `json:"name"`
-	Description *string            `json:"description"`
-	User        primitive.ObjectID `json:"user"`
+	Slug        string  `json:"slug"`
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
 }
 
 type Token struct {
