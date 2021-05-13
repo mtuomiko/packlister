@@ -14,6 +14,10 @@ func (r *userResolver) Packlists(ctx context.Context, obj *model.User) ([]*model
 	return r.DB.FindPacklistsByUserId(obj.ID)
 }
 
+func (r *userResolver) UserItems(ctx context.Context, obj *model.User) ([]*model.UserItem, error) {
+	return obj.UserItems, nil
+}
+
 // User returns generated.UserResolver implementation.
 func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
 

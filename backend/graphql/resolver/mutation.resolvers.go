@@ -7,34 +7,19 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/mtuomiko/packlister/auth"
 	"github.com/mtuomiko/packlister/graphql/generated"
 	"github.com/mtuomiko/packlister/graphql/model"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func (r *mutationResolver) CreatePacklist(ctx context.Context, input model.NewPacklist) (*model.Packlist, error) {
-	gc, err := GinContextFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-	raw, ok := gc.Get("claims")
-	if !ok {
-		return nil, fmt.Errorf("auth failed")
-	}
-	claims, ok := raw.(*auth.JwtClaim)
-	if !ok {
-		return nil, fmt.Errorf("auth failed")
-	}
-	user, err := r.DB.FindUserByUsername(claims.Username)
+	claims, err := GetClaimsFromGinContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("auth failed")
 	}
 	packlist := model.Packlist{
-		Slug:        input.Slug,
-		Name:        input.Name,
-		Description: input.Description,
-		UserID:      user.ID,
+		Name:   input.Name,
+		UserID: claims.UserID,
 	}
 	return r.DB.CreatePacklist(packlist)
 }
@@ -56,7 +41,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 	return r.DB.CreateUser(user)
 }
 
-func (r *mutationResolver) Login(ctx context.Context, input *model.LoginInput) (*model.Token, error) {
+func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.Token, error) {
 	err := r.Validator.Struct(input)
 	if err != nil {
 		return nil, err
@@ -77,6 +62,22 @@ func (r *mutationResolver) Login(ctx context.Context, input *model.LoginInput) (
 		Value: signedToken,
 	}
 	return &token, nil
+}
+
+func (r *mutationResolver) UpdateState(ctx context.Context, userItems []*model.UserItemInput, packlist *model.PacklistInput) (bool, error) {
+	claims, err := GetClaimsFromGinContext(ctx)
+	if err != nil {
+		return false, fmt.Errorf("auth failed")
+	}
+	err = r.DB.UpdateUserItems(claims.UserID, userItems)
+	if err != nil {
+		return false, err
+	}
+	err = r.DB.UpdatePacklist(packlist)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

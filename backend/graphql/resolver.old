@@ -1,9 +1,0 @@
-package graph
-
-import (
-	"github.com/mtuomiko/packlister/db"
-)
-
-type Resolver struct {
-	DB db.DB
-}

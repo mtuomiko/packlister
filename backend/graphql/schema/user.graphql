@@ -2,8 +2,8 @@ type User {
   id: ID!
   username: String!
   email: String!
-  # passwordHash: String!
-  packlists: [Packlist!]!
+  packlists: [Packlist!]! @goField(forceResolver: true)
+  userItems: [UserItem!]! @goField(forceResolver: true)
 }
 
 input NewUser {
@@ -19,4 +19,18 @@ type Token {
 input LoginInput {
   username: String!
   password: String!
+}
+
+type UserItem {
+  internalId: String!
+  name: String!
+  description: String
+  weight: Int!
+}
+
+input UserItemInput {
+  internalId: String!
+  name: String!
+  description: String
+  weight: Int!
 }

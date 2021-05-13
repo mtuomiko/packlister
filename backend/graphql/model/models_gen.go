@@ -2,12 +2,57 @@
 
 package model
 
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+type Category struct {
+	InternalID    string          `json:"internalId"`
+	Name          string          `json:"name"`
+	CategoryItems []*CategoryItem `json:"categoryItems"`
+}
+
+type CategoryInput struct {
+	InternalID    string               `json:"internalId"`
+	Name          *string              `json:"name"`
+	CategoryItems []*CategoryItemInput `json:"categoryItems"`
+}
+
+type CategoryItem struct {
+	UserItem *UserItem `json:"userItem"`
+	Quantity int       `json:"quantity"`
+}
+
+type CategoryItemInput struct {
+	UserItemID string `json:"userItemId"`
+	Quantity   *int   `json:"quantity"`
+}
+
 type NewPacklist struct {
-	Slug        string  `json:"slug"`
-	Name        string  `json:"name"`
-	Description *string `json:"description"`
+	Name string `json:"name"`
+}
+
+type PacklistInput struct {
+	ID          primitive.ObjectID `json:"id"`
+	Name        string             `json:"name"`
+	Description *string            `json:"description"`
+	Categories  []*CategoryInput   `json:"categories"`
 }
 
 type Token struct {
 	Value string `json:"value"`
+}
+
+type UserItem struct {
+	InternalID  string  `json:"internalId"`
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
+	Weight      int     `json:"weight"`
+}
+
+type UserItemInput struct {
+	InternalID  string  `json:"internalId"`
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
+	Weight      int     `json:"weight"`
 }

@@ -1,13 +1,40 @@
 type Packlist {
   id: ID!
-  slug: String!
   name: String!
   description: String
   user: User!
+  categories: [Category!]! @goField(forceResolver: true)
 }
 
 input NewPacklist {
-  slug: String!
+  name: String!
+}
+
+type Category {
+  internalId: String!
+  name: String!
+  categoryItems: [CategoryItem!]!
+}
+
+type CategoryItem {
+  userItem: UserItem!
+  quantity: Int!
+}
+
+input PacklistInput {
+  id: ID!
   name: String!
   description: String
+  categories: [CategoryInput!]!
+}
+
+input CategoryInput {
+  internalId: String!
+  name: String
+  categoryItems: [CategoryItemInput!]!
+}
+
+input CategoryItemInput {
+  userItemId: String!
+  quantity: Int
 }

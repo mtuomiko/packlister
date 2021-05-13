@@ -13,7 +13,7 @@ import (
 
 type Resolver struct {
 	DB        db.DB
-	Validator *validator.Validate // Validator docs suggest using single instance for struct caching
+	Validator *validator.Validate // Validator docs suggest using single instance to allow struct caching
 	Jwt       auth.JwtWrapper
 }
 
@@ -22,10 +22,25 @@ func GinContextFromContext(ctx context.Context) (*gin.Context, error) {
 	if ginContext == nil {
 		return nil, fmt.Errorf("could not retrieve gin.Context")
 	}
-
 	gc, ok := ginContext.(*gin.Context)
 	if !ok {
 		return nil, fmt.Errorf("gin.Context has wrong type")
 	}
 	return gc, nil
+}
+
+func GetClaimsFromGinContext(ctx context.Context) (*auth.JwtClaim, error) {
+	ginContext, err := GinContextFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	rawClaims, ok := ginContext.Get("claims")
+	if !ok {
+		return nil, fmt.Errorf("claims not found in gin.Context")
+	}
+	claims, ok := rawClaims.(*auth.JwtClaim)
+	if !ok {
+		return nil, fmt.Errorf("claims type assertion failed")
+	}
+	return claims, nil
 }

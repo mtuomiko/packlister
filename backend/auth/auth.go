@@ -9,6 +9,7 @@ import (
 	jwt "gopkg.in/dgrijalva/jwt-go.v3"
 
 	"github.com/mtuomiko/packlister/graphql/model"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type JwtWrapper struct {
@@ -17,13 +18,15 @@ type JwtWrapper struct {
 }
 
 type JwtClaim struct {
+	UserID   primitive.ObjectID
 	Username string
 	Email    string
 	jwt.StandardClaims
 }
 
 func (j *JwtWrapper) GenerateToken(user *model.User) (signedToken string, err error) {
-	claims := &JwtClaim{
+	claims := JwtClaim{
+		UserID:   user.ID,
 		Username: user.Username,
 		Email:    user.Email,
 		StandardClaims: jwt.StandardClaims{

@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/mtuomiko/packlister/graphql/generated"
 	"github.com/mtuomiko/packlister/graphql/model"
@@ -25,6 +26,18 @@ func (r *queryResolver) AllUsers(ctx context.Context) ([]*model.User, error) {
 
 func (r *queryResolver) FindUser(ctx context.Context, id primitive.ObjectID) (*model.User, error) {
 	return r.DB.FindOneUser(id)
+}
+
+func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
+	claims, err := GetClaimsFromGinContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("auth failed")
+	}
+	res, err := r.DB.FindOneUser(claims.UserID)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 // Query returns generated.QueryResolver implementation.

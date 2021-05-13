@@ -19,6 +19,9 @@ type DB interface {
 	FindPacklistsByUserId(userId primitive.ObjectID) ([]*model.Packlist, error)
 	CreateUser(input model.User) (*model.User, error)
 	FindUserByUsername(username string) (*model.User, error)
+	UpdateUser(user *model.User) (*model.User, error)
+	UpdateUserItems(userId primitive.ObjectID, userItems []*model.UserItemInput) error
+	UpdatePacklist(packlist *model.PacklistInput) error
 }
 
 type MongoDB struct {
@@ -49,12 +52,12 @@ func (db MongoDB) GetAllPacklists() ([]*model.Packlist, error) {
 }
 
 func (db MongoDB) CreatePacklist(input model.Packlist) (*model.Packlist, error) {
-	insertResult, err := db.packlists.InsertOne(context.TODO(), bson.D{
-		{Key: "slug", Value: input.Slug},
-		{Key: "name", Value: input.Name},
-		{Key: "description", Value: input.Description},
-		{Key: "user", Value: input.UserID},
-	})
+	// insertResult, err := db.packlists.InsertOne(context.TODO(), bson.D{
+	// 	{Key: "name", Value: input.Name},
+	// 	{Key: "description", Value: input.Description},
+	// 	{Key: "user", Value: input.UserID},
+	// })
+	insertResult, err := db.packlists.InsertOne(context.TODO(), input)
 	if err != nil {
 		return nil, fmt.Errorf("error inserting packlist")
 	}
@@ -130,6 +133,56 @@ func (db MongoDB) FindUserByUsername(username string) (*model.User, error) {
 		return nil, fmt.Errorf("user not found")
 	}
 	return user, nil
+}
+
+func (db MongoDB) UpdateUser(user *model.User) (*model.User, error) {
+	res, err := db.users.ReplaceOne(context.TODO(),
+		bson.M{"username": user.Username},
+		user,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if res.MatchedCount != 1 {
+		return nil, fmt.Errorf("user not found")
+	}
+	return user, nil
+}
+
+func (db MongoDB) UpdateUserItems(userId primitive.ObjectID, userItems []*model.UserItemInput) error {
+	res, err := db.users.UpdateByID(context.TODO(), userId,
+		bson.D{
+			{"$set", bson.D{
+				{"userItems", userItems},
+			}},
+		},
+	)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount != 1 {
+		return fmt.Errorf("did not find userItems to update")
+	}
+	return nil
+}
+
+func (db MongoDB) UpdatePacklist(packlist *model.PacklistInput) error {
+	res, err := db.packlists.UpdateByID(context.TODO(), packlist.ID,
+		bson.D{
+			{"$set", bson.D{
+				{"name", packlist.Name},
+				{"description", packlist.Description},
+				{"categories", packlist.Categories},
+			}},
+		},
+	)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount != 1 {
+		return fmt.Errorf("did not find packlist to update")
+	}
+	return nil
 }
 
 func FindPacklistById(db MongoDB, objectId primitive.ObjectID) (*model.Packlist, error) {
