@@ -28,7 +28,7 @@ func (r *queryResolver) FindUser(ctx context.Context, id primitive.ObjectID) (*m
 	return r.DB.FindOneUser(id)
 }
 
-func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
+func (r *queryResolver) GetAuthorizedUser(ctx context.Context) (*model.User, error) {
 	claims, err := GetClaimsFromGinContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("auth failed")

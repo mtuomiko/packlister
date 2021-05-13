@@ -7,6 +7,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator"
 	"github.com/joho/godotenv"
@@ -54,7 +55,13 @@ func main() {
 		ExpirationHours: 240,
 	}
 
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowAllOrigins = true
+	corsConfig.AllowHeaders = append(corsConfig.AllowHeaders, "Authorization")
+
 	router := gin.Default()
+
+	router.Use(cors.New(corsConfig))
 	router.Use(auth.AuthMiddleware(jwt))
 	router.Use(GinContextToContextMiddleware())
 

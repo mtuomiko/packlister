@@ -19,8 +19,8 @@ type CategoryInput struct {
 }
 
 type CategoryItem struct {
-	UserItem *UserItem `json:"userItem"`
-	Quantity int       `json:"quantity"`
+	UserItemID string `json:"userItemId"`
+	Quantity   int    `json:"quantity"`
 }
 
 type CategoryItemInput struct {

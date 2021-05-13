@@ -17,7 +17,7 @@ type Category {
 }
 
 type CategoryItem {
-  userItem: UserItem!
+  userItemId: String!
   quantity: Int!
 }
 

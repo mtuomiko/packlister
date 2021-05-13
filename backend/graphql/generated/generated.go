@@ -53,8 +53,8 @@ type ComplexityRoot struct {
 	}
 
 	CategoryItem struct {
-		Quantity func(childComplexity int) int
-		UserItem func(childComplexity int) int
+		Quantity   func(childComplexity int) int
+		UserItemID func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -73,11 +73,11 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		AllPacklists func(childComplexity int) int
-		AllUsers     func(childComplexity int) int
-		FindPacklist func(childComplexity int, id primitive.ObjectID) int
-		FindUser     func(childComplexity int, id primitive.ObjectID) int
-		Me           func(childComplexity int) int
+		AllPacklists      func(childComplexity int) int
+		AllUsers          func(childComplexity int) int
+		FindPacklist      func(childComplexity int, id primitive.ObjectID) int
+		FindUser          func(childComplexity int, id primitive.ObjectID) int
+		GetAuthorizedUser func(childComplexity int) int
 	}
 
 	Token struct {
@@ -115,7 +115,7 @@ type QueryResolver interface {
 	FindPacklist(ctx context.Context, id primitive.ObjectID) (*model.Packlist, error)
 	AllUsers(ctx context.Context) ([]*model.User, error)
 	FindUser(ctx context.Context, id primitive.ObjectID) (*model.User, error)
-	Me(ctx context.Context) (*model.User, error)
+	GetAuthorizedUser(ctx context.Context) (*model.User, error)
 }
 type UserResolver interface {
 	Packlists(ctx context.Context, obj *model.User) ([]*model.Packlist, error)
@@ -165,12 +165,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CategoryItem.Quantity(childComplexity), true
 
-	case "CategoryItem.userItem":
-		if e.complexity.CategoryItem.UserItem == nil {
+	case "CategoryItem.userItemId":
+		if e.complexity.CategoryItem.UserItemID == nil {
 			break
 		}
 
-		return e.complexity.CategoryItem.UserItem(childComplexity), true
+		return e.complexity.CategoryItem.UserItemID(childComplexity), true
 
 	case "Mutation.createPacklist":
 		if e.complexity.Mutation.CreatePacklist == nil {
@@ -293,12 +293,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.FindUser(childComplexity, args["id"].(primitive.ObjectID)), true
 
-	case "Query.me":
-		if e.complexity.Query.Me == nil {
+	case "Query.getAuthorizedUser":
+		if e.complexity.Query.GetAuthorizedUser == nil {
 			break
 		}
 
-		return e.complexity.Query.Me(childComplexity), true
+		return e.complexity.Query.GetAuthorizedUser(childComplexity), true
 
 	case "Token.value":
 		if e.complexity.Token.Value == nil {
@@ -460,7 +460,7 @@ type Category {
 }
 
 type CategoryItem {
-  userItem: UserItem!
+  userItemId: String!
   quantity: Int!
 }
 
@@ -496,7 +496,7 @@ type Query {
   findPacklist(id: ID!): Packlist
   allUsers: [User!]!
   findUser(id: ID!): User
-  me: User
+  getAuthorizedUser: User
 }`, BuiltIn: false},
 	{Name: "graphql/schema/user.graphql", Input: `type User {
   id: ID!
@@ -798,7 +798,7 @@ func (ec *executionContext) _Category_categoryItems(ctx context.Context, field g
 	return ec.marshalNCategoryItem2ᚕᚖgithubᚗcomᚋmtuomikoᚋpacklisterᚋgraphqlᚋmodelᚐCategoryItemᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _CategoryItem_userItem(ctx context.Context, field graphql.CollectedField, obj *model.CategoryItem) (ret graphql.Marshaler) {
+func (ec *executionContext) _CategoryItem_userItemId(ctx context.Context, field graphql.CollectedField, obj *model.CategoryItem) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -816,7 +816,7 @@ func (ec *executionContext) _CategoryItem_userItem(ctx context.Context, field gr
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.UserItem, nil
+		return obj.UserItemID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -828,9 +828,9 @@ func (ec *executionContext) _CategoryItem_userItem(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.UserItem)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNUserItem2ᚖgithubᚗcomᚋmtuomikoᚋpacklisterᚋgraphqlᚋmodelᚐUserItem(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CategoryItem_quantity(ctx context.Context, field graphql.CollectedField, obj *model.CategoryItem) (ret graphql.Marshaler) {
@@ -1347,7 +1347,7 @@ func (ec *executionContext) _Query_findUser(ctx context.Context, field graphql.C
 	return ec.marshalOUser2ᚖgithubᚗcomᚋmtuomikoᚋpacklisterᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_getAuthorizedUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1365,7 +1365,7 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Me(rctx)
+		return ec.resolvers.Query().GetAuthorizedUser(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3176,8 +3176,8 @@ func (ec *executionContext) _CategoryItem(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("CategoryItem")
-		case "userItem":
-			out.Values[i] = ec._CategoryItem_userItem(ctx, field, obj)
+		case "userItemId":
+			out.Values[i] = ec._CategoryItem_userItemId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -3361,7 +3361,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_findUser(ctx, field)
 				return res
 			})
-		case "me":
+		case "getAuthorizedUser":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -3369,7 +3369,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_me(ctx, field)
+				res = ec._Query_getAuthorizedUser(ctx, field)
 				return res
 			})
 		case "__type":

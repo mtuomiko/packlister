@@ -13,5 +13,5 @@ type Query {
   findPacklist(id: ID!): Packlist
   allUsers: [User!]!
   findUser(id: ID!): User
-  me: User
+  getAuthorizedUser: User
 }
