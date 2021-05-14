@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react'
-import { useMutation } from '@apollo/client'
-import { LOGIN } from '../graphql/mutations'
+import React, { useState, useEffect } from 'react';
+import { useMutation } from '@apollo/client';
+import TextField from '@material-ui/core/TextField';
+import Button from '@material-ui/core/Button';
+
+import { LOGIN } from '../graphql/mutations';
 
 interface LoginInput {
   username: string;
@@ -47,20 +50,24 @@ const LoginForm = ({ setToken }: {
   return (
     <div>
       <form onSubmit={submit}>
-        <div>
-          username <input
-            value={username}
-            onChange={({ target }) => setUsername(target.value)}
-          />
-        </div>
-        <div>
-          password <input
-            type='password'
-            value={password}
-            onChange={({ target }) => setPassword(target.value)}
-          />
-        </div>
-        <button type='submit'>Login</button>
+        <TextField
+          required
+          id="username"
+          label="Username"
+          value={username}
+          variant="outlined"
+          onChange={({ target }) => setUsername(target.value)}
+        />
+        <TextField
+          required
+          id="password"
+          label="Password"
+          type="password"
+          value={password}
+          variant="outlined"
+          onChange={({ target }) => setPassword(target.value)}
+        />
+        <Button variant="outlined" type="submit">Login</Button>
       </form>
     </div>
   );

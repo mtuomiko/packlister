@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Button from '@material-ui/core/Button';
 
 import LoginForm from './components/LoginForm';
 
@@ -12,6 +13,11 @@ const App = () => {
     }
   }, []);
 
+  const logout = () => {
+    setToken('')
+    localStorage.removeItem('packlister-user-token');
+  }
+
   if (!token) {
     return (
       <div>
@@ -24,6 +30,7 @@ const App = () => {
   return (
     <div>
       <p>Can has login</p>
+      <Button variant='outlined' onClick={logout}>Logout</Button>
     </div>
   );
 }
