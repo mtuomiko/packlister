@@ -1,37 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { Button, Container, TextField, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { LOGIN } from '../graphql/mutations';
+import { REGISTER } from '../graphql/mutations';
 
-interface LoginInput {
+interface RegisterInput {
   username: string;
+  email: string;
   password: string;
 }
 
 const useStyles = makeStyles({
-  loginContainer: {
+  registerContainer: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
   },
 });
 
-const LoginForm = ({ setToken }: {
-  setToken: React.Dispatch<React.SetStateAction<string>>
-}) => {
+const RegisterForm = () => {
   const [username, setUsername] = useState<string>('')
+  const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string>('')
 
-  const [login, result] = useMutation<
+  const [register, result] = useMutation<
     {
-      login: {
-        value: string,
+      register: {
+        id: string,
       },
     },
-    LoginInput
-  >(LOGIN, {
+    RegisterInput
+  >(REGISTER, {
     onError: (error) => {
       if (error?.graphQLErrors[0]?.message) {
         console.error(error?.graphQLErrors[0]?.message)
@@ -41,26 +41,24 @@ const LoginForm = ({ setToken }: {
     }
   })
 
-  useEffect(() => {
-    if (result.data) {
-      const token = result.data.login.value
-      setToken(token)
-      localStorage.setItem('packlister-user-token', token)
-    }
-  }, [result.data, setToken])
+  // useEffect(() => {
+  //   if (result.data) {
+  //     const token = result.data.login.value
+  //   }
+  // }, [result.data, setToken])
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    login({ variables: { username, password } })
+    register({ variables: { username, email, password } })
   }
 
   const classes = useStyles();
 
   return (
-    <Container className={classes.loginContainer}>
+    <Container className={classes.registerContainer}>
       <Typography component="h1" variant="h5">
-        Login
+        Register
       </Typography>
       <form onSubmit={submit}>
         <TextField
@@ -69,6 +67,15 @@ const LoginForm = ({ setToken }: {
           label="Username"
           value={username}
           onChange={({ target }) => setUsername(target.value)}
+          variant="outlined"
+          fullWidth
+        />
+        <TextField
+          required
+          id="email"
+          label="Email"
+          value={email}
+          onChange={({ target }) => setEmail(target.value)}
           variant="outlined"
           fullWidth
         />
@@ -86,10 +93,10 @@ const LoginForm = ({ setToken }: {
           type="submit"
           variant="contained"
           fullWidth
-        >Log in</Button>
+        >Register</Button>
       </form>
     </Container>
   );
 }
 
-export default LoginForm
+export default RegisterForm
