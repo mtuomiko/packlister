@@ -28,6 +28,11 @@ type CategoryItemInput struct {
 	Quantity   *int   `json:"quantity"`
 }
 
+type LoginResponse struct {
+	Token string `json:"token"`
+	User  *User  `json:"user"`
+}
+
 type NewPacklist struct {
 	Name string `json:"name"`
 }
@@ -37,10 +42,6 @@ type PacklistInput struct {
 	Name        string             `json:"name"`
 	Description *string            `json:"description"`
 	Categories  []*CategoryInput   `json:"categories"`
-}
-
-type Token struct {
-	Value string `json:"value"`
 }
 
 type UserItem struct {

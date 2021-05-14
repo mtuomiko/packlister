@@ -41,16 +41,16 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 	return r.DB.CreateUser(user)
 }
 
-func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.Token, error) {
-	err := r.Validator.Struct(input)
+func (r *mutationResolver) Login(ctx context.Context, credentials model.LoginInput) (*model.LoginResponse, error) {
+	err := r.Validator.Struct(credentials)
 	if err != nil {
 		return nil, err
 	}
-	user, err := r.DB.FindUserByUsername(input.Username)
+	user, err := r.DB.FindUserByUsername(credentials.Username)
 	if err != nil {
 		return nil, fmt.Errorf("login failed")
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(input.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(credentials.Password))
 	if err != nil {
 		return nil, fmt.Errorf("login failed")
 	}
@@ -58,8 +58,9 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*
 	if err != nil {
 		return nil, fmt.Errorf("login failed")
 	}
-	token := model.Token{
-		Value: signedToken,
+	token := model.LoginResponse{
+		Token: signedToken,
+		User:  user,
 	}
 	return &token, nil
 }

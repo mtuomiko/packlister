@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { Button, Container, TextField, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
+import { useHistory } from "react-router-dom";
 
 import { REGISTER } from '../graphql/mutations';
 
@@ -20,9 +21,11 @@ const useStyles = makeStyles({
 });
 
 const RegisterForm = () => {
-  const [username, setUsername] = useState<string>('')
-  const [email, setEmail] = useState<string>('')
-  const [password, setPassword] = useState<string>('')
+  const [username, setUsername] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+
+  const history = useHistory();
 
   const [register, result] = useMutation<
     {
@@ -41,11 +44,11 @@ const RegisterForm = () => {
     }
   })
 
-  // useEffect(() => {
-  //   if (result.data) {
-  //     const token = result.data.login.value
-  //   }
-  // }, [result.data, setToken])
+  useEffect(() => {
+    if (result.data) {
+      history.replace("/login");
+    }
+  }, [result.data, history]);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()

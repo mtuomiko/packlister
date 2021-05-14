@@ -12,8 +12,9 @@ input NewUser {
   password: String!
 }
 
-type Token {
-  value: String!
+type LoginResponse {
+  token: String!
+  user: User!
 }
 
 input LoginInput {

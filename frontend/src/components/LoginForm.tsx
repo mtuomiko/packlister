@@ -4,6 +4,7 @@ import { Button, Container, TextField, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 
 import { LOGIN } from '../graphql/mutations';
+import { UserState } from '../App';
 
 interface LoginInput {
   username: string;
@@ -18,8 +19,8 @@ const useStyles = makeStyles({
   },
 });
 
-const LoginForm = ({ setToken }: {
-  setToken: React.Dispatch<React.SetStateAction<string>>
+const LoginForm = ({ setUser }: {
+  setUser: React.Dispatch<React.SetStateAction<UserState | undefined>>
 }) => {
   const [username, setUsername] = useState<string>('')
   const [password, setPassword] = useState<string>('')
@@ -27,7 +28,12 @@ const LoginForm = ({ setToken }: {
   const [login, result] = useMutation<
     {
       login: {
-        value: string,
+        token: string,
+        user: {
+          id: string,
+          username: string,
+          email: string,
+        },
       },
     },
     LoginInput
@@ -43,11 +49,12 @@ const LoginForm = ({ setToken }: {
 
   useEffect(() => {
     if (result.data) {
-      const token = result.data.login.value
-      setToken(token)
-      localStorage.setItem('packlister-user-token', token)
+      const { token, user } = result.data.login
+      const userState = { token, ...user }
+      setUser(userState)
+      localStorage.setItem('packlister-user', JSON.stringify(token))
     }
-  }, [result.data, setToken])
+  }, [result.data, setUser])
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()

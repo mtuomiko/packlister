@@ -5,6 +5,7 @@ import reportWebVitals from './reportWebVitals';
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 import { ApolloProvider } from '@apollo/client/react';
 import { setContext } from "@apollo/client/link/context";
+import { BrowserRouter } from 'react-router-dom';
 
 const httpLink = new HttpLink({ uri: 'http://localhost:8080/query' });
 
@@ -26,7 +27,9 @@ const client = new ApolloClient({
 ReactDOM.render(
   <React.StrictMode>
     <ApolloProvider client={client}>
-      <App />
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </ApolloProvider>
   </React.StrictMode>,
   document.getElementById('root')

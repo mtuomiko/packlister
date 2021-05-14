@@ -57,10 +57,15 @@ type ComplexityRoot struct {
 		UserItemID func(childComplexity int) int
 	}
 
+	LoginResponse struct {
+		Token func(childComplexity int) int
+		User  func(childComplexity int) int
+	}
+
 	Mutation struct {
 		CreatePacklist func(childComplexity int, input model.NewPacklist) int
 		CreateUser     func(childComplexity int, input model.NewUser) int
-		Login          func(childComplexity int, input model.LoginInput) int
+		Login          func(childComplexity int, credentials model.LoginInput) int
 		UpdateState    func(childComplexity int, userItems []*model.UserItemInput, packlist *model.PacklistInput) int
 	}
 
@@ -78,10 +83,6 @@ type ComplexityRoot struct {
 		FindPacklist      func(childComplexity int, id primitive.ObjectID) int
 		FindUser          func(childComplexity int, id primitive.ObjectID) int
 		GetAuthorizedUser func(childComplexity int) int
-	}
-
-	Token struct {
-		Value func(childComplexity int) int
 	}
 
 	User struct {
@@ -103,7 +104,7 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	CreatePacklist(ctx context.Context, input model.NewPacklist) (*model.Packlist, error)
 	CreateUser(ctx context.Context, input model.NewUser) (*model.User, error)
-	Login(ctx context.Context, input model.LoginInput) (*model.Token, error)
+	Login(ctx context.Context, credentials model.LoginInput) (*model.LoginResponse, error)
 	UpdateState(ctx context.Context, userItems []*model.UserItemInput, packlist *model.PacklistInput) (bool, error)
 }
 type PacklistResolver interface {
@@ -172,6 +173,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CategoryItem.UserItemID(childComplexity), true
 
+	case "LoginResponse.token":
+		if e.complexity.LoginResponse.Token == nil {
+			break
+		}
+
+		return e.complexity.LoginResponse.Token(childComplexity), true
+
+	case "LoginResponse.user":
+		if e.complexity.LoginResponse.User == nil {
+			break
+		}
+
+		return e.complexity.LoginResponse.User(childComplexity), true
+
 	case "Mutation.createPacklist":
 		if e.complexity.Mutation.CreatePacklist == nil {
 			break
@@ -206,7 +221,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Login(childComplexity, args["input"].(model.LoginInput)), true
+		return e.complexity.Mutation.Login(childComplexity, args["credentials"].(model.LoginInput)), true
 
 	case "Mutation.updateState":
 		if e.complexity.Mutation.UpdateState == nil {
@@ -299,13 +314,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetAuthorizedUser(childComplexity), true
-
-	case "Token.value":
-		if e.complexity.Token.Value == nil {
-			break
-		}
-
-		return e.complexity.Token.Value(childComplexity), true
 
 	case "User.email":
 		if e.complexity.User.Email == nil {
@@ -437,7 +445,7 @@ var sources = []*ast.Source{
 	{Name: "graphql/schema/mutation.graphql", Input: `type Mutation {
   createPacklist(input: NewPacklist!): Packlist
   createUser(input: NewUser!): User
-  login(input: LoginInput!): Token
+  login(credentials: LoginInput!): LoginResponse
   updateState(userItems: [UserItemInput!]!, packlist: PacklistInput): Boolean!
 }
 `, BuiltIn: false},
@@ -512,8 +520,9 @@ input NewUser {
   password: String!
 }
 
-type Token {
-  value: String!
+type LoginResponse {
+  token: String!
+  user: User!
 }
 
 input LoginInput {
@@ -575,14 +584,14 @@ func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawAr
 	var err error
 	args := map[string]interface{}{}
 	var arg0 model.LoginInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["credentials"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("credentials"))
 		arg0, err = ec.unmarshalNLoginInput2githubᚗcomᚋmtuomikoᚋpacklisterᚋgraphqlᚋmodelᚐLoginInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg0
+	args["credentials"] = arg0
 	return args, nil
 }
 
@@ -868,6 +877,76 @@ func (ec *executionContext) _CategoryItem_quantity(ctx context.Context, field gr
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _LoginResponse_token(ctx context.Context, field graphql.CollectedField, obj *model.LoginResponse) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "LoginResponse",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Token, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LoginResponse_user(ctx context.Context, field graphql.CollectedField, obj *model.LoginResponse) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "LoginResponse",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.User, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgithubᚗcomᚋmtuomikoᚋpacklisterᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_createPacklist(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -971,7 +1050,7 @@ func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.C
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().Login(rctx, args["input"].(model.LoginInput))
+		return ec.resolvers.Mutation().Login(rctx, args["credentials"].(model.LoginInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -980,9 +1059,9 @@ func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.C
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Token)
+	res := resTmp.(*model.LoginResponse)
 	fc.Result = res
-	return ec.marshalOToken2ᚖgithubᚗcomᚋmtuomikoᚋpacklisterᚋgraphqlᚋmodelᚐToken(ctx, field.Selections, res)
+	return ec.marshalOLoginResponse2ᚖgithubᚗcomᚋmtuomikoᚋpacklisterᚋgraphqlᚋmodelᚐLoginResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateState(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1448,41 +1527,6 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	res := resTmp.(*introspection.Schema)
 	fc.Result = res
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Token_value(ctx context.Context, field graphql.CollectedField, obj *model.Token) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Token",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Value, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
@@ -3197,6 +3241,38 @@ func (ec *executionContext) _CategoryItem(ctx context.Context, sel ast.Selection
 	return out
 }
 
+var loginResponseImplementors = []string{"LoginResponse"}
+
+func (ec *executionContext) _LoginResponse(ctx context.Context, sel ast.SelectionSet, obj *model.LoginResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, loginResponseImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LoginResponse")
+		case "token":
+			out.Values[i] = ec._LoginResponse_token(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "user":
+			out.Values[i] = ec._LoginResponse_user(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -3376,33 +3452,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
 			out.Values[i] = ec._Query___schema(ctx, field)
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var tokenImplementors = []string{"Token"}
-
-func (ec *executionContext) _Token(ctx context.Context, sel ast.SelectionSet, obj *model.Token) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, tokenImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Token")
-		case "value":
-			out.Values[i] = ec._Token_value(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4423,6 +4472,13 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return graphql.MarshalInt(*v)
 }
 
+func (ec *executionContext) marshalOLoginResponse2ᚖgithubᚗcomᚋmtuomikoᚋpacklisterᚋgraphqlᚋmodelᚐLoginResponse(ctx context.Context, sel ast.SelectionSet, v *model.LoginResponse) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._LoginResponse(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOPacklist2ᚖgithubᚗcomᚋmtuomikoᚋpacklisterᚋgraphqlᚋmodelᚐPacklist(ctx context.Context, sel ast.SelectionSet, v *model.Packlist) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -4496,13 +4552,6 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return graphql.MarshalString(*v)
-}
-
-func (ec *executionContext) marshalOToken2ᚖgithubᚗcomᚋmtuomikoᚋpacklisterᚋgraphqlᚋmodelᚐToken(ctx context.Context, sel ast.SelectionSet, v *model.Token) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Token(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋmtuomikoᚋpacklisterᚋgraphqlᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {

@@ -1,6 +1,6 @@
 type Mutation {
   createPacklist(input: NewPacklist!): Packlist
   createUser(input: NewUser!): User
-  login(input: LoginInput!): Token
+  login(credentials: LoginInput!): LoginResponse
   updateState(userItems: [UserItemInput!]!, packlist: PacklistInput): Boolean!
 }
