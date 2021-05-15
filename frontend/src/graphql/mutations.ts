@@ -27,3 +27,11 @@ export const REGISTER = gql`
     }
   }
 `;
+
+export const UPDATE_USERITEMS = gql`
+  mutation updateUserItems($userItems: [UserItemInput!]!) {
+    updateState(userItems: $userItems) {
+      success
+    }
+  }
+`;

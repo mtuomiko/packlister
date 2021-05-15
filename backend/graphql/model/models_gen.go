@@ -44,6 +44,10 @@ type PacklistInput struct {
 	Categories  []*CategoryInput   `json:"categories"`
 }
 
+type UpdateResponse struct {
+	Success bool `json:"success"`
+}
+
 type UserItem struct {
 	InternalID  string  `json:"internalId"`
 	Name        string  `json:"name"`

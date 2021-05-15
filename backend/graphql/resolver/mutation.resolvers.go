@@ -65,22 +65,22 @@ func (r *mutationResolver) Login(ctx context.Context, credentials model.LoginInp
 	return &token, nil
 }
 
-func (r *mutationResolver) UpdateState(ctx context.Context, userItems []*model.UserItemInput, packlist *model.PacklistInput) (bool, error) {
+func (r *mutationResolver) UpdateState(ctx context.Context, userItems []*model.UserItemInput, packlist *model.PacklistInput) (*model.UpdateResponse, error) {
 	claims, err := GetClaimsFromGinContext(ctx)
 	if err != nil {
-		return false, fmt.Errorf("auth failed")
+		return nil, fmt.Errorf("auth failed")
 	}
 	err = r.DB.UpdateUserItems(claims.UserID, userItems)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	if packlist != nil {
 		err = r.DB.UpdatePacklist(packlist)
 		if err != nil {
-			return false, err
+			return nil, err
 		}
 	}
-	return true, nil
+	return &model.UpdateResponse{Success: true}, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

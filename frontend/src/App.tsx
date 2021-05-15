@@ -22,7 +22,7 @@ export interface UserItemResponse {
 
 const App = () => {
   const [user, setUser] = useState<UserState>();
-  const [userItems, setUserItems] = useState<UserItem[]>();
+  // const [userItems, setUserItems] = useState<UserItem[]>();
 
   useEffect(() => {
     const userString = localStorage.getItem("packlister-user");
@@ -33,9 +33,9 @@ const App = () => {
 
   const userItemsQuery = useQuery<UserItemResponse>(GET_USER_ITEMS);
 
-  useEffect(() => {
-    setUserItems(userItemsQuery.data?.getAuthorizedUser.userItems);
-  }, [userItemsQuery.data]);
+  // useEffect(() => {
+  //   setUserItems(userItemsQuery.data?.getAuthorizedUser.userItems);
+  // }, [userItemsQuery.data]);
 
   const logout = () => {
     setUser(undefined);
@@ -54,8 +54,8 @@ const App = () => {
               <LoggedIn 
               logout={logout} 
               user={user} 
-              userItems={userItems} 
-              setUserItems={setUserItems}
+              userItemsQuery={userItemsQuery} 
+              // setUserItems={setUserItems}
               />
             </Route>
           </Switch>
