@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { useMutation } from '@apollo/client';
-import { Button, Container, TextField, Typography } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import React, { useState, useEffect } from "react";
+import { useMutation } from "@apollo/client";
+import { Button, Container, TextField, Typography } from "@material-ui/core";
+import { makeStyles } from "@material-ui/core/styles";
 
-import { LOGIN } from '../graphql/mutations';
-import { UserState } from '../App';
+import { LOGIN } from "../graphql/mutations";
+import { UserState } from "../App";
 
 interface LoginInput {
   username: string;
@@ -13,17 +13,17 @@ interface LoginInput {
 
 const useStyles = makeStyles({
   loginContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
   },
 });
 
 const LoginForm = ({ setUser }: {
   setUser: React.Dispatch<React.SetStateAction<UserState | undefined>>
 }) => {
-  const [username, setUsername] = useState<string>('')
-  const [password, setPassword] = useState<string>('')
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
 
   const [login, result] = useMutation<
     {
@@ -40,27 +40,27 @@ const LoginForm = ({ setUser }: {
   >(LOGIN, {
     onError: (error) => {
       if (error?.graphQLErrors[0]?.message) {
-        console.error(error?.graphQLErrors[0]?.message)
+        console.error(error?.graphQLErrors[0]?.message);
       } else {
-        console.error(error.message)
+        console.error(error.message);
       }
     }
-  })
+  });
 
   useEffect(() => {
     if (result.data) {
-      const { token, user } = result.data.login
-      const userState = { token, ...user }
-      setUser(userState)
-      localStorage.setItem('packlister-user', JSON.stringify(token))
+      const { token, user } = result.data.login;
+      const userState = { token, ...user };
+      setUser(userState);
+      localStorage.setItem("packlister-user", JSON.stringify(token));
     }
-  }, [result.data, setUser])
+  }, [result.data, setUser]);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+    event.preventDefault();
 
-    login({ variables: { username, password } })
-  }
+    login({ variables: { username, password } });
+  };
 
   const classes = useStyles();
 
@@ -97,6 +97,6 @@ const LoginForm = ({ setUser }: {
       </form>
     </Container>
   );
-}
+};
 
-export default LoginForm
+export default LoginForm;

@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
-import { Button, Container, TextField, Typography } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import React, { useEffect, useState } from "react";
+import { useMutation } from "@apollo/client";
+import { Button, Container, TextField, Typography } from "@material-ui/core";
+import { makeStyles } from "@material-ui/core/styles";
 import { useHistory } from "react-router-dom";
 
-import { REGISTER } from '../graphql/mutations';
+import { REGISTER } from "../graphql/mutations";
 
 interface RegisterInput {
   username: string;
@@ -14,16 +14,16 @@ interface RegisterInput {
 
 const useStyles = makeStyles({
   registerContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
   },
 });
 
 const RegisterForm = () => {
-  const [username, setUsername] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
+  const [username, setUsername] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
 
   const history = useHistory();
 
@@ -37,12 +37,12 @@ const RegisterForm = () => {
   >(REGISTER, {
     onError: (error) => {
       if (error?.graphQLErrors[0]?.message) {
-        console.error(error?.graphQLErrors[0]?.message)
+        console.error(error?.graphQLErrors[0]?.message);
       } else {
-        console.error(error.message)
+        console.error(error.message);
       }
     }
-  })
+  });
 
   useEffect(() => {
     if (result.data) {
@@ -51,10 +51,10 @@ const RegisterForm = () => {
   }, [result.data, history]);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+    event.preventDefault();
 
-    register({ variables: { username, email, password } })
-  }
+    register({ variables: { username, email, password } });
+  };
 
   const classes = useStyles();
 
@@ -100,6 +100,6 @@ const RegisterForm = () => {
       </form>
     </Container>
   );
-}
+};
 
-export default RegisterForm
+export default RegisterForm;

@@ -1,5 +1,5 @@
-import { gql } from '@apollo/client';
-import { USER_ITEM_FIELDS } from './fragments'
+import { gql } from "@apollo/client";
+import { USER_ITEM_FIELDS } from "./fragments";
 
 export const GET_AUTHORIZED_USER = gql`
   ${USER_ITEM_FIELDS}
@@ -26,4 +26,4 @@ export const GET_AUTHORIZED_USER = gql`
       }
     }
   }
-`
+`;

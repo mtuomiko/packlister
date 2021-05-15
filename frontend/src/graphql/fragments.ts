@@ -7,4 +7,4 @@ export const USER_ITEM_FIELDS = gql`
     description
     weight
   }
-`
+`;
