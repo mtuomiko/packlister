@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Container } from "@material-ui/core";
+import { Container } from "@material-ui/core";
 import {
   Switch,
   Route,
@@ -9,16 +9,20 @@ import LoginForm from "./components/LoginForm";
 import RegisterForm from "./components/RegisterForm";
 import ExternalPacklist from "./components/ExternalPacklist";
 import Home from "./components/Home";
+import { useQuery } from "@apollo/client";
+import { GET_USER_ITEMS } from "./graphql/queries";
+import { UserItem, UserState } from "./types";
+import LoggedIn from "./components/LoggedIn";
 
-export interface UserState {
-  token: string;
-  id: string;
-  username: string;
-  email: string;
+export interface UserItemResponse {
+  getAuthorizedUser: {
+    userItems: UserItem[];
+  };
 }
 
 const App = () => {
   const [user, setUser] = useState<UserState>();
+  const [userItems, setUserItems] = useState<UserItem[]>();
 
   useEffect(() => {
     const userString = localStorage.getItem("packlister-user");
@@ -26,6 +30,12 @@ const App = () => {
       setUser(JSON.parse(userString));
     }
   }, []);
+
+  const userItemsQuery = useQuery<UserItemResponse>(GET_USER_ITEMS);
+
+  useEffect(() => {
+    setUserItems(userItemsQuery.data?.getAuthorizedUser.userItems);
+  }, [userItemsQuery.data]);
 
   const logout = () => {
     setUser(undefined);
@@ -41,11 +51,12 @@ const App = () => {
               <ExternalPacklist />
             </Route>
             <Route path="/">
-              <p>Can has login</p>
-              <div>{user.id}</div>
-              <div>{user.username}</div>
-              <div>{user.email}</div>
-              <Button variant='outlined' onClick={logout}>Logout</Button>
+              <LoggedIn 
+              logout={logout} 
+              user={user} 
+              userItems={userItems} 
+              setUserItems={setUserItems}
+              />
             </Route>
           </Switch>
         </div>

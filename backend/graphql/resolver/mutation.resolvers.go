@@ -74,9 +74,11 @@ func (r *mutationResolver) UpdateState(ctx context.Context, userItems []*model.U
 	if err != nil {
 		return false, err
 	}
-	err = r.DB.UpdatePacklist(packlist)
-	if err != nil {
-		return false, err
+	if packlist != nil {
+		err = r.DB.UpdatePacklist(packlist)
+		if err != nil {
+			return false, err
+		}
 	}
 	return true, nil
 }

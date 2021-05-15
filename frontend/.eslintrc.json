@@ -10,6 +10,23 @@
     "@typescript-eslint/quotes": [
       "error",
       "double"
+    ],
+    "@typescript-eslint/member-delimiter-style": [
+      "error",
+      {
+        "multiline": {
+          "delimiter": "semi",
+          "requireLast": true
+        },
+        "singleline": {
+          "delimiter": "semi",
+          "requireLast": false
+        },
+        "multilineDetection": "last-member"
+      }
+    ],
+    "@typescript-eslint/no-explicit-any": [
+      "error"
     ]
   }
 }

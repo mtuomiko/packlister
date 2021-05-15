@@ -30,8 +30,8 @@ const RegisterForm = () => {
   const [register, result] = useMutation<
     {
       register: {
-        id: string,
-      },
+        id: string;
+      };
     },
     RegisterInput
   >(REGISTER, {

@@ -4,7 +4,7 @@ import { Button, Container, TextField, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 
 import { LOGIN } from "../graphql/mutations";
-import { UserState } from "../App";
+import { UserState } from "../types";
 
 interface LoginInput {
   username: string;
@@ -20,7 +20,7 @@ const useStyles = makeStyles({
 });
 
 const LoginForm = ({ setUser }: {
-  setUser: React.Dispatch<React.SetStateAction<UserState | undefined>>
+  setUser: React.Dispatch<React.SetStateAction<UserState | undefined>>;
 }) => {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -28,13 +28,13 @@ const LoginForm = ({ setUser }: {
   const [login, result] = useMutation<
     {
       login: {
-        token: string,
+        token: string;
         user: {
-          id: string,
-          username: string,
-          email: string,
-        },
-      },
+          id: string;
+          username: string;
+          email: string;
+        };
+      };
     },
     LoginInput
   >(LOGIN, {
