@@ -10,12 +10,13 @@ import RegisterForm from "./components/RegisterForm";
 import ExternalPacklist from "./components/ExternalPacklist";
 import Home from "./components/Home";
 import { useQuery } from "@apollo/client";
-import { GET_USER_ITEMS } from "./graphql/queries";
-import { UserItem, UserState } from "./types";
+import { GET_INITIAL_STATE } from "./graphql/queries";
+import { Packlist, UserItem, UserState } from "./types";
 import LoggedIn from "./components/LoggedIn";
 
-export interface UserItemResponse {
+export interface InitialStateResponse {
   getAuthorizedUser: {
+    packlists: Packlist[];
     userItems: UserItem[];
   };
 }
@@ -23,6 +24,8 @@ export interface UserItemResponse {
 const App = () => {
   const [user, setUser] = useState<UserState>();
   // const [userItems, setUserItems] = useState<UserItem[]>();
+  const [currentPacklistId, setCurrentPacklistId] = useState<string>("");
+  //const [packlists, setPacklists] = useState<Packlist[]>();
 
   useEffect(() => {
     const userString = localStorage.getItem("packlister-user");
@@ -31,7 +34,9 @@ const App = () => {
     }
   }, []);
 
-  const userItemsQuery = useQuery<UserItemResponse>(GET_USER_ITEMS);
+  const initialStateQuery = useQuery<InitialStateResponse>(GET_INITIAL_STATE, {
+    skip: !user
+  });
 
   // useEffect(() => {
   //   setUserItems(userItemsQuery.data?.getAuthorizedUser.userItems);
@@ -51,10 +56,12 @@ const App = () => {
               <ExternalPacklist />
             </Route>
             <Route path="/">
-              <LoggedIn 
-              logout={logout} 
-              user={user} 
-              userItemsQuery={userItemsQuery} 
+              <LoggedIn
+                logout={logout}
+                user={user}
+                initialStateQuery={initialStateQuery}
+                currentPacklistId={currentPacklistId}
+                setCurrentPacklistId={setCurrentPacklistId}
               // setUserItems={setUserItems}
               />
             </Route>

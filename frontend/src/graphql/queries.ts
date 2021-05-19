@@ -1,34 +1,25 @@
 import { gql } from "@apollo/client";
 import { USER_ITEM_FIELDS } from "./fragments";
 
-// export const GET_USER_DATA = gql`
-//   ${USER_ITEM_FIELDS}
-//   query getUserData {
-//     getAuthorizedUser {
-//       packlists {
-//         id
-//         name
-//         description
-//         categories {
-//           internalId
-//           name
-//           categoryItems {
-//             userItemId
-//             quantity
-//           }
-//         }
-//       }
-//       userItems {
-//         ...UserItemFields
-//       }
-//     }
-//   }
-// `;
-
-export const GET_USER_ITEMS = gql`
+export const GET_INITIAL_STATE = gql`
   ${USER_ITEM_FIELDS}
-  query getUserItems {
+  query getInitialState {
     getAuthorizedUser {
+      id
+      packlists {
+        id
+        name
+        description
+        categories {
+          internalId
+          name
+          categoryItems {
+            internalId
+            userItemId
+            quantity
+          }
+        }
+      }
       userItems {
         ...UserItemFields
       }

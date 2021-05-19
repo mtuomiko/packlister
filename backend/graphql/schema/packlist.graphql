@@ -17,6 +17,7 @@ type Category {
 }
 
 type CategoryItem {
+  internalId: String!
   userItemId: String!
   quantity: Int!
 }
@@ -35,6 +36,7 @@ input CategoryInput {
 }
 
 input CategoryItemInput {
+  internalId: String!
   userItemId: String!
   quantity: Int
 }

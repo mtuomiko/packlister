@@ -28,9 +28,9 @@ export const REGISTER = gql`
   }
 `;
 
-export const UPDATE_USERITEMS = gql`
-  mutation updateUserItems($userItems: [UserItemInput!]!) {
-    updateState(userItems: $userItems) {
+export const UPDATE_STATE = gql`
+  mutation updateState($userItems: [UserItemInput!]!, $packlist: PacklistInput!) {
+    updateState(userItems: $userItems, packlist: $packlist) {
       success
     }
   }

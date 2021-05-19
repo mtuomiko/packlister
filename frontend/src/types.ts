@@ -1,7 +1,7 @@
 export interface Packlist {
   id: string;
   name: string;
-  description?: string;
+  description: string;
   categories: Category[];
 }
 
@@ -12,6 +12,7 @@ export interface Category {
 }
 
 export interface CategoryItem {
+  internalId: string;
   userItemId: string;
   quantity: number;
 }
@@ -21,6 +22,7 @@ export interface UserItem {
   name: string;
   description: string;
   weight: number;
+  __typename: string;
 }
 
 export interface UserState {

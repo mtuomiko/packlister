@@ -53,6 +53,7 @@ type ComplexityRoot struct {
 	}
 
 	CategoryItem struct {
+		InternalID func(childComplexity int) int
 		Quantity   func(childComplexity int) int
 		UserItemID func(childComplexity int) int
 	}
@@ -162,6 +163,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Category.Name(childComplexity), true
+
+	case "CategoryItem.internalId":
+		if e.complexity.CategoryItem.InternalID == nil {
+			break
+		}
+
+		return e.complexity.CategoryItem.InternalID(childComplexity), true
 
 	case "CategoryItem.quantity":
 		if e.complexity.CategoryItem.Quantity == nil {
@@ -482,6 +490,7 @@ type Category {
 }
 
 type CategoryItem {
+  internalId: String!
   userItemId: String!
   quantity: Int!
 }
@@ -500,6 +509,7 @@ input CategoryInput {
 }
 
 input CategoryItemInput {
+  internalId: String!
   userItemId: String!
   quantity: Int
 }`, BuiltIn: false},
@@ -819,6 +829,41 @@ func (ec *executionContext) _Category_categoryItems(ctx context.Context, field g
 	res := resTmp.([]*model.CategoryItem)
 	fc.Result = res
 	return ec.marshalNCategoryItem2ᚕᚖgithubᚗcomᚋmtuomikoᚋpacklisterᚋgraphqlᚋmodelᚐCategoryItemᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CategoryItem_internalId(ctx context.Context, field graphql.CollectedField, obj *model.CategoryItem) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "CategoryItem",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.InternalID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CategoryItem_userItemId(ctx context.Context, field graphql.CollectedField, obj *model.CategoryItem) (ret graphql.Marshaler) {
@@ -3016,6 +3061,14 @@ func (ec *executionContext) unmarshalInputCategoryItemInput(ctx context.Context,
 
 	for k, v := range asMap {
 		switch k {
+		case "internalId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("internalId"))
+			it.InternalID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "userItemId":
 			var err error
 
@@ -3266,6 +3319,11 @@ func (ec *executionContext) _CategoryItem(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("CategoryItem")
+		case "internalId":
+			out.Values[i] = ec._CategoryItem_internalId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "userItemId":
 			out.Values[i] = ec._CategoryItem_userItemId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

@@ -19,11 +19,13 @@ type CategoryInput struct {
 }
 
 type CategoryItem struct {
+	InternalID string `json:"internalId"`
 	UserItemID string `json:"userItemId"`
 	Quantity   int    `json:"quantity"`
 }
 
 type CategoryItemInput struct {
+	InternalID string `json:"internalId"`
 	UserItemID string `json:"userItemId"`
 	Quantity   *int   `json:"quantity"`
 }

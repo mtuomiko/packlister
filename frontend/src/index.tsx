@@ -2,25 +2,43 @@ import React from "react";
 import ReactDOM from "react-dom";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
+import { ApolloClient, InMemoryCache, HttpLink, ApolloLink, from } from "@apollo/client";
 import { ApolloProvider } from "@apollo/client/react";
 import { setContext } from "@apollo/client/link/context";
 import { BrowserRouter } from "react-router-dom";
+import omitDeep from "./omitDeep";
 
 const httpLink = new HttpLink({ uri: "http://localhost:8080/query" });
 
+const cleanTypenameLink = new ApolloLink((operation, forward) => {
+  if (operation.variables && !operation.variables.file) {
+    operation.variables = omitDeep(operation.variables, "__typename");
+  }
+  return forward(operation);
+});
+
 const authLink = setContext((_, { headers }) => {
-  const token = localStorage.getItem("packlister-user-token");
+  const userString = localStorage.getItem("packlister-user");
+  if (userString) {
+    const user = JSON.parse(userString);
+    return {
+      headers: {
+        ...headers,
+        authorization: user.token ? `bearer ${user.token}` : null,
+      },
+    };
+  }
   return {
-    headers: {
-      ...headers,
-      authorization: token ? `bearer ${token}` : null,
-    },
+    headers
   };
 });
 
 const client = new ApolloClient({
-  link: authLink.concat(httpLink),
+  link: from([
+    cleanTypenameLink,
+    authLink,
+    httpLink,
+  ]),
   cache: new InMemoryCache(),
 });
 

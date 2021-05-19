@@ -5,6 +5,7 @@ import { makeStyles } from "@material-ui/core/styles";
 
 import { LOGIN } from "../graphql/mutations";
 import { UserState } from "../types";
+import { useHistory } from "react-router-dom";
 
 interface LoginInput {
   username: string;
@@ -24,6 +25,7 @@ const LoginForm = ({ setUser }: {
 }) => {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const history = useHistory();
 
   const [login, result] = useMutation<
     {
@@ -52,9 +54,10 @@ const LoginForm = ({ setUser }: {
       const { token, user } = result.data.login;
       const userState = { token, ...user };
       setUser(userState);
-      localStorage.setItem("packlister-user", JSON.stringify(token));
+      localStorage.setItem("packlister-user", JSON.stringify(userState));
+      history.replace("/");
     }
-  }, [result.data, setUser]);
+  }, [result.data, setUser, history]);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
