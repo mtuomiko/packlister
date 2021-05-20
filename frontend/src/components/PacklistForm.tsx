@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { Button, TextField, makeStyles } from "@material-ui/core";
+import { AddCircle } from "@material-ui/icons";
 import { FieldArray, FieldArrayRenderProps, Form, FormikProps } from "formik";
 import { nanoid } from "nanoid";
 import { DragDropContext, DraggableLocation, Droppable, DropResult } from "react-beautiful-dnd";
@@ -7,11 +8,16 @@ import { DragDropContext, DraggableLocation, Droppable, DropResult } from "react
 import { Category, CategoryItem, Packlist, UserItem } from "../types";
 import PacklistFormCategory from "./PacklistFormCategory";
 
+/*
+  Currently the total structure of the Form is fairly deeply nested since we 
+  are using Formik, Material UI and react-beautiful-dnd which all add to the 
+  depth with their components.
+*/
+
 const useStyles = makeStyles((theme) => ({
   formContainer: {
     margin: theme.spacing(1),
     padding: theme.spacing(1),
-    backgroundColor: "white",
     border: "1px solid black",
   },
 }));
@@ -117,17 +123,17 @@ const PacklistForm = ({ formikProps }: PacklistFormProps) => {
         value={formikProps.values.packlist.description}
       />
       <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable droppableId="categoryMain" type="droppableCategory">
-          {provided => (
-            <div
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-            >
-              <FieldArray name="packlist.categories"
-                render={(arrayHelpers) => {
-                  categoryHelpersRef.current = arrayHelpers;
-                  return (
-                    <div>
+        <FieldArray name="packlist.categories"
+          render={(arrayHelpers) => {
+            categoryHelpersRef.current = arrayHelpers;
+            return (
+              <div>
+                <Droppable droppableId="categoryMain" type="droppableCategory">
+                  {provided => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                    >
                       {formikProps.values.packlist.categories.map((category, i) => (
                         <PacklistFormCategory
                           key={category.internalId}
@@ -137,18 +143,22 @@ const PacklistForm = ({ formikProps }: PacklistFormProps) => {
                           addCategoryItem={addCategoryItem}
                         />
                       ))}
-                      <Button
-                        variant="outlined"
-                        onClick={() => addCategory(arrayHelpers)}
-                      >Add category</Button>
+
+                      {provided.placeholder}
                     </div>
-                  );
-                }}
-              />
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
+                  )}
+                </Droppable>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  onClick={() => addCategory(arrayHelpers)}
+                  startIcon={<AddCircle />}
+                >Add category</Button>
+              </div>
+            );
+          }}
+        />
       </DragDropContext>
     </Form>
   );

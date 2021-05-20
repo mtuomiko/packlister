@@ -1,4 +1,4 @@
-import { Grid, IconButton, makeStyles, TextField } from "@material-ui/core";
+import { Box, Grid, IconButton, makeStyles, TextField } from "@material-ui/core";
 import { Delete, Reorder } from "@material-ui/icons";
 import { FieldArrayRenderProps, useFormikContext } from "formik";
 import React from "react";
@@ -12,6 +12,10 @@ const useStyles = makeStyles((theme) => ({
     // padding: theme.spacing(1),
     // backgroundColor: "white",
     // border: "1px solid black",
+  },
+  handleBox: {
+    display: "flex",
+    justifyContent: "flex-end",
   },
 }));
 
@@ -39,15 +43,19 @@ const PacklistFormItem = ({ item, categoryIndex, itemIndex, itemArrayHelpers }: 
         >
           <Grid container spacing={0}>
             <Grid item xs={1}>
-              <IconButton {...provided.dragHandleProps} size="small"><Reorder /></IconButton>
+              <Box className={classes.handleBox}>
+                <IconButton {...provided.dragHandleProps} size="small"><Reorder /></IconButton>
+              </Box>
             </Grid>
             <Grid item xs={4}>
-              <TextField
-                size="small"
-                value={userItem?.name}
-                placeholder="Name"
-                fullWidth
-              />
+              <Box paddingLeft={1}>
+                <TextField
+                  size="small"
+                  value={userItem?.name}
+                  placeholder="Name"
+                  fullWidth
+                />
+              </Box>
             </Grid>
             <Grid item xs={4}>
               <TextField

@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Grid, IconButton, makeStyles, TextField, Typography } from "@material-ui/core";
+import { Box, Button, Grid, IconButton, makeStyles, TextField, Typography } from "@material-ui/core";
 import { AddCircle, Delete, Reorder } from "@material-ui/icons";
 import { FieldArray, FieldArrayRenderProps, useFormikContext } from "formik";
 import { Draggable, Droppable } from "react-beautiful-dnd";
@@ -13,6 +13,10 @@ const useStyles = makeStyles((theme) => ({
     // backgroundColor: "white",
     // border: "1px solid black",
     marginBottom: theme.spacing(2),
+  },
+  handleBox: {
+    display: "flex",
+    justifyContent: "flex-end",
   },
   categoryNameInput: {
     fontWeight: "bold",
@@ -46,7 +50,9 @@ const PacklistFormCategory = ({ category, categoryIndex, categoryArrayHelpers, a
         >
           <Grid container spacing={0}>
             <Grid item xs={1}>
-              <IconButton {...provided.dragHandleProps} size="small"><Reorder /></IconButton>
+              <Box className={classes.handleBox}>
+                <IconButton {...provided.dragHandleProps} size="small"><Reorder /></IconButton>
+              </Box>
             </Grid>
             <Grid item xs={8}>
               <TextField
@@ -74,59 +80,58 @@ const PacklistFormCategory = ({ category, categoryIndex, categoryArrayHelpers, a
               </IconButton>
             </Grid>
           </Grid>
-
-          <Droppable droppableId={`itemDroppable-${categoryIndex}`} type="droppableItem">
-            {itemDropProvided => (
-              <div
-                ref={itemDropProvided.innerRef}
-                {...itemDropProvided.droppableProps}
-              >
-                <FieldArray name={`packlist.categories.${categoryIndex}.categoryItems`}
-                  render={(itemArrayHelpers) => {
-                    return (
+          <FieldArray name={`packlist.categories.${categoryIndex}.categoryItems`}
+            render={(itemArrayHelpers) => (
+              <div>
+                <Droppable droppableId={`itemDroppable-${categoryIndex}`} type="droppableItem">
+                  {itemDropProvided => (
+                    <div
+                      ref={itemDropProvided.innerRef}
+                      {...itemDropProvided.droppableProps}
+                    >
                       <div>
-                        <div>
-                          {formikContext.values.packlist.categories[categoryIndex].categoryItems.map((item, itemIndex) => (
-                            <PacklistFormItem
-                              key={item.internalId}
-                              item={item}
-                              categoryIndex={categoryIndex}
-                              itemIndex={itemIndex}
-                              itemArrayHelpers={itemArrayHelpers}
-                            />
-                          ))}
-                        </div>
-                        <Grid container>
-                          <Grid item xs={1}></Grid>
-                          <Grid item xs={9}>
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              onClick={() => addCategoryItem(itemArrayHelpers)}
-                              startIcon={<AddCircle />}
-                            >Add item</Button>
-                          </Grid>
-                          <Grid item xs={1}>
-                            <Typography>{formikContext.values.packlist.categories[categoryIndex].categoryItems.reduce(
-                              (acc, val) => {
-                                const qty = val.quantity;
-                                const weight = formikContext.values.userItems.find(i => i.internalId === val.userItemId)?.weight || 0;
-                                const res = qty * weight;
-                                return acc + res;
-                              }, 0)} g
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={1}></Grid>
-                        </Grid>
+                        {formikContext.values.packlist.categories[categoryIndex].categoryItems.map((item, itemIndex) => (
+                          <PacklistFormItem
+                            key={item.internalId}
+                            item={item}
+                            categoryIndex={categoryIndex}
+                            itemIndex={itemIndex}
+                            itemArrayHelpers={itemArrayHelpers}
+                          />
+                        ))}
+
                       </div>
-                    );
-                  }}
-                />
-                {itemDropProvided.placeholder}
+                      {itemDropProvided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+                <Grid container>
+                  <Grid item xs={1}></Grid>
+                  <Grid item xs={9}>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      size="small"
+                      onClick={() => addCategoryItem(itemArrayHelpers)}
+                      startIcon={<AddCircle />}
+                    >Add item</Button>
+                  </Grid>
+                  <Grid item xs={1}>
+                    <Typography><Box fontWeight="fontWeightBold">
+                      {formikContext.values.packlist.categories[categoryIndex].categoryItems.reduce(
+                        (acc, val) => {
+                          const qty = val.quantity;
+                          const weight = formikContext.values.userItems.find(i => i.internalId === val.userItemId)?.weight || 0;
+                          const res = qty * weight;
+                          return acc + res;
+                        }, 0)} g
+                    </Box></Typography>
+                  </Grid>
+                  <Grid item xs={1}></Grid>
+                </Grid>
               </div>
             )}
-          </Droppable>
-
+          />
         </div>
       )}
     </Draggable>
