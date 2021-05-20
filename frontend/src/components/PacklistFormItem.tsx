@@ -4,14 +4,11 @@ import { FieldArrayRenderProps, useFormikContext } from "formik";
 import React from "react";
 import { Draggable } from "react-beautiful-dnd";
 import { CategoryItem } from "../types";
-import { FormikFields } from "./PacklistFormCategory";
+import { UpdateStateInput } from "./LoggedIn";
 
 const useStyles = makeStyles((theme) => ({
   itemContainer: {
-    // margin: theme.spacing(1, 0),
-    // padding: theme.spacing(1),
-    // backgroundColor: "white",
-    // border: "1px solid black",
+    backgroundColor: theme.palette.background.default,
   },
   handleBox: {
     display: "flex",
@@ -26,10 +23,12 @@ interface Props {
   itemArrayHelpers: FieldArrayRenderProps;
 }
 
-
 const PacklistFormItem = ({ item, categoryIndex, itemIndex, itemArrayHelpers }: Props) => {
-  const formikContext = useFormikContext<FormikFields>();
-  const userItem = formikContext.values.userItems.find(i => i.internalId === item.userItemId);
+  const formikContext = useFormikContext<UpdateStateInput>();
+
+  // Find which UserItem this item refers to
+  const userItemIndex = formikContext.values.userItems.findIndex(i => i.internalId === item.userItemId);
+  const userItem = formikContext.values.userItems[userItemIndex];
 
   const classes = useStyles();
 
@@ -50,27 +49,36 @@ const PacklistFormItem = ({ item, categoryIndex, itemIndex, itemArrayHelpers }: 
             <Grid item xs={4}>
               <Box paddingLeft={1}>
                 <TextField
+                  name={`userItems.${userItemIndex}.name`}
                   size="small"
-                  value={userItem?.name}
+                  value={userItem.name}
                   placeholder="Name"
                   fullWidth
+                  onChange={formikContext.handleChange}
+                  onBlur={formikContext.handleBlur}
                 />
               </Box>
             </Grid>
             <Grid item xs={4}>
               <TextField
+                name={`userItems.${userItemIndex}.description`}
                 size="small"
                 value={userItem?.description}
                 placeholder="Description"
                 fullWidth
+                onChange={formikContext.handleChange}
+                onBlur={formikContext.handleBlur}
               />
             </Grid>
             <Grid item xs={1}>
               <TextField
+                name={`userItems.${userItemIndex}.weight`}
                 size="small"
                 type="number"
                 value={userItem?.weight}
                 fullWidth
+                onChange={formikContext.handleChange}
+                onBlur={formikContext.handleBlur}
               />
             </Grid>
             <Grid item xs={1}>

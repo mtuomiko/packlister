@@ -1,12 +1,13 @@
 import { useRef } from "react";
 import { Button, TextField, makeStyles } from "@material-ui/core";
 import { AddCircle } from "@material-ui/icons";
-import { FieldArray, FieldArrayRenderProps, Form, FormikProps } from "formik";
+import { FieldArray, FieldArrayRenderProps, Form, useFormikContext } from "formik";
 import { nanoid } from "nanoid";
 import { DragDropContext, DraggableLocation, Droppable, DropResult } from "react-beautiful-dnd";
 
-import { Category, CategoryItem, Packlist, UserItem } from "../types";
+import { Category } from "../types";
 import PacklistFormCategory from "./PacklistFormCategory";
+import { UpdateStateInput } from "./LoggedIn";
 
 /*
   Currently the total structure of the Form is fairly deeply nested since we 
@@ -22,33 +23,11 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-interface PacklistFormProps {
-  formikProps: FormikProps<{
-    userItems: UserItem[];
-    packlist: Packlist;
-  }>;
-}
-
-const PacklistForm = ({ formikProps }: PacklistFormProps) => {
+const PacklistForm = () => {
+  const formikContext = useFormikContext<UpdateStateInput>();
   const addCategory = (helpers: FieldArrayRenderProps) => {
     const newCategory: Category = { internalId: nanoid(), name: "", categoryItems: [] };
     helpers.push(newCategory);
-  };
-
-  const addCategoryItem = (helpers: FieldArrayRenderProps) => {
-    const newCategoryItem: CategoryItem = { internalId: nanoid(), userItemId: nanoid(), quantity: 0 };
-    // Adding a new item so corresponding UserItem needs to created
-    const newUserItem: UserItem = {
-      internalId: newCategoryItem.userItemId,
-      name: "",
-      description: "",
-      weight: 0,
-      __typename: "UserItem",
-    };
-    helpers.push(newCategoryItem);
-    // New UserItem needs to pushed through formikProps
-    const userItems = formikProps.values.userItems.concat(newUserItem);
-    formikProps.setFieldValue("userItems", userItems);
   };
 
   const classes = useStyles();
@@ -73,15 +52,16 @@ const PacklistForm = ({ formikProps }: PacklistFormProps) => {
     if (result.type === "droppableItem") {
       if (source.droppableId === destination.droppableId) {
         // Move item within same category
-        const sourceCategoryIndex = parseInt(source.droppableId.split("-")[1]);
-        const categoryItems = formikProps.values.packlist.categories[sourceCategoryIndex].categoryItems;
+        const categoryIndex = parseInt(source.droppableId.split("-")[1]);
+        const categoryItems = formikContext.values.packlist.categories[categoryIndex].categoryItems;
 
-        // Deep copy CategoryItems
-        const items = JSON.parse(JSON.stringify(categoryItems));
-        [items[source.index], items[destination.index]] = [items[destination.index], items[source.index]];
-        formikProps.setFieldValue(`packlist.categories.${sourceCategoryIndex}.categoryItems`, items);
+        const modifiedItems = Array.from(categoryItems);
+
+        const [movedItem] = modifiedItems.splice(source.index, 1);
+        modifiedItems.splice(destination.index, 0, movedItem);
+
+        formikContext.setFieldValue(`packlist.categories.${categoryIndex}.categoryItems`, modifiedItems);
       } else {
-        // Move item to another category
         moveItemBetweenCategories(source, destination);
       }
     }
@@ -90,20 +70,19 @@ const PacklistForm = ({ formikProps }: PacklistFormProps) => {
   const moveItemBetweenCategories = (source: DraggableLocation, destination: DraggableLocation) => {
     const sourceCategoryIndex = parseInt(source.droppableId.split("-")[1]);
     const destinationCategoryIndex = parseInt(destination.droppableId.split("-")[1]);
-    const categories = formikProps.values.packlist.categories;
+    const categories = formikContext.values.packlist.categories;
 
     const sourceCategoryItems = categories[sourceCategoryIndex].categoryItems;
     const destinationCategoryItems = categories[destinationCategoryIndex].categoryItems;
 
-    // Deep copy CategoryItems
-    const newSourceItems: CategoryItem[] = JSON.parse(JSON.stringify(sourceCategoryItems));
-    const newDestinationItems: CategoryItem[] = JSON.parse(JSON.stringify(destinationCategoryItems));
+    const newSourceItems = Array.from(sourceCategoryItems);
+    const newDestinationItems = Array.from(destinationCategoryItems);
 
     const [movedItem] = newSourceItems.splice(source.index, 1);
     newDestinationItems.splice(destination.index, 0, movedItem);
 
-    formikProps.setFieldValue(`packlist.categories.${sourceCategoryIndex}.categoryItems`, newSourceItems);
-    formikProps.setFieldValue(`packlist.categories.${destinationCategoryIndex}.categoryItems`, newDestinationItems);
+    formikContext.setFieldValue(`packlist.categories.${sourceCategoryIndex}.categoryItems`, newSourceItems);
+    formikContext.setFieldValue(`packlist.categories.${destinationCategoryIndex}.categoryItems`, newDestinationItems);
   };
 
   return (
@@ -111,16 +90,16 @@ const PacklistForm = ({ formikProps }: PacklistFormProps) => {
       <TextField
         name="packlist.name"
         label="Name"
-        onChange={formikProps.handleChange}
-        onBlur={formikProps.handleBlur}
-        value={formikProps.values.packlist.name}
+        onChange={formikContext.handleChange}
+        onBlur={formikContext.handleBlur}
+        value={formikContext.values.packlist.name}
       />
       <TextField
         name="packlist.description"
         label="Description"
-        onChange={formikProps.handleChange}
-        onBlur={formikProps.handleBlur}
-        value={formikProps.values.packlist.description}
+        onChange={formikContext.handleChange}
+        onBlur={formikContext.handleBlur}
+        value={formikContext.values.packlist.description}
       />
       <DragDropContext onDragEnd={handleDragEnd}>
         <FieldArray name="packlist.categories"
@@ -134,16 +113,14 @@ const PacklistForm = ({ formikProps }: PacklistFormProps) => {
                       ref={provided.innerRef}
                       {...provided.droppableProps}
                     >
-                      {formikProps.values.packlist.categories.map((category, i) => (
+                      {formikContext.values.packlist.categories.map((category, i) => (
                         <PacklistFormCategory
                           key={category.internalId}
                           category={category}
                           categoryIndex={i}
                           categoryArrayHelpers={arrayHelpers}
-                          addCategoryItem={addCategoryItem}
                         />
                       ))}
-
                       {provided.placeholder}
                     </div>
                   )}

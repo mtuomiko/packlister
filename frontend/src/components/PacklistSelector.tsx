@@ -18,6 +18,7 @@ const PacklistSelector = ({ packlists, setCurrentPacklistId }: {
       <Button
         size="small"
         variant="contained"
+        color="primary"
         startIcon={<AddCircle />}
       >Create new</Button>
     </Box>

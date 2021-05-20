@@ -3,15 +3,14 @@ import { Box, Button, Grid, IconButton, makeStyles, TextField, Typography } from
 import { AddCircle, Delete, Reorder } from "@material-ui/icons";
 import { FieldArray, FieldArrayRenderProps, useFormikContext } from "formik";
 import { Draggable, Droppable } from "react-beautiful-dnd";
-import { Category, Packlist, UserItem } from "../types";
+import { Category, CategoryItem, UserItem } from "../types";
 import PacklistFormItem from "./PacklistFormItem";
+import { nanoid } from "nanoid";
+import { UpdateStateInput } from "./LoggedIn";
 
 const useStyles = makeStyles((theme) => ({
   categoryContainer: {
-    // margin: theme.spacing(1),
-    // padding: theme.spacing(1, 0),
-    // backgroundColor: "white",
-    // border: "1px solid black",
+    backgroundColor: theme.palette.background.default,
     marginBottom: theme.spacing(2),
   },
   handleBox: {
@@ -27,16 +26,27 @@ interface Props {
   category: Category;
   categoryIndex: number;
   categoryArrayHelpers: FieldArrayRenderProps;
-  addCategoryItem: (helpers: FieldArrayRenderProps) => void;
 }
 
-export interface FormikFields {
-  userItems: UserItem[];
-  packlist: Packlist;
-}
+const PacklistFormCategory = ({ category, categoryIndex, categoryArrayHelpers }: Props) => {
+  const formikContext = useFormikContext<UpdateStateInput>();
 
-const PacklistFormCategory = ({ category, categoryIndex, categoryArrayHelpers, addCategoryItem }: Props) => {
-  const formikContext = useFormikContext<FormikFields>();
+  const addCategoryItem = (helpers: FieldArrayRenderProps) => {
+    const newCategoryItem: CategoryItem = { internalId: nanoid(), userItemId: nanoid(), quantity: 0 };
+    // Adding a new item so the corresponding UserItem needs to created
+    const newUserItem: UserItem = {
+      internalId: newCategoryItem.userItemId,
+      name: "",
+      description: "",
+      weight: 0,
+      __typename: "UserItem",
+    };
+    helpers.push(newCategoryItem);
+    // New UserItem needs to pushed through setFieldValue since we don't have
+    // access to helpers of the UserItem arrays
+    const userItems = formikContext.values.userItems.concat(newUserItem);
+    formikContext.setFieldValue("userItems", userItems);
+  };
 
   const classes = useStyles();
 
@@ -89,18 +99,15 @@ const PacklistFormCategory = ({ category, categoryIndex, categoryArrayHelpers, a
                       ref={itemDropProvided.innerRef}
                       {...itemDropProvided.droppableProps}
                     >
-                      <div>
-                        {formikContext.values.packlist.categories[categoryIndex].categoryItems.map((item, itemIndex) => (
-                          <PacklistFormItem
-                            key={item.internalId}
-                            item={item}
-                            categoryIndex={categoryIndex}
-                            itemIndex={itemIndex}
-                            itemArrayHelpers={itemArrayHelpers}
-                          />
-                        ))}
-
-                      </div>
+                      {formikContext.values.packlist.categories[categoryIndex].categoryItems.map((item, itemIndex) => (
+                        <PacklistFormItem
+                          key={item.internalId}
+                          item={item}
+                          categoryIndex={categoryIndex}
+                          itemIndex={itemIndex}
+                          itemArrayHelpers={itemArrayHelpers}
+                        />
+                      ))}
                       {itemDropProvided.placeholder}
                     </div>
                   )}
@@ -117,7 +124,7 @@ const PacklistFormCategory = ({ category, categoryIndex, categoryArrayHelpers, a
                     >Add item</Button>
                   </Grid>
                   <Grid item xs={1}>
-                    <Typography><Box fontWeight="fontWeightBold">
+                    <Typography className={classes.categoryNameInput}>
                       {formikContext.values.packlist.categories[categoryIndex].categoryItems.reduce(
                         (acc, val) => {
                           const qty = val.quantity;
@@ -125,7 +132,7 @@ const PacklistFormCategory = ({ category, categoryIndex, categoryArrayHelpers, a
                           const res = qty * weight;
                           return acc + res;
                         }, 0)} g
-                    </Box></Typography>
+                      </Typography>
                   </Grid>
                   <Grid item xs={1}></Grid>
                 </Grid>

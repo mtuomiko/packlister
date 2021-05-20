@@ -1,7 +1,7 @@
 import React from "react";
 
 import { Packlist, UserItem, UserState } from "../types";
-import { OperationVariables, QueryResult, useMutation } from "@apollo/client";
+import { ApolloCache, OperationVariables, QueryResult, useMutation } from "@apollo/client";
 import { InitialStateResponse } from "../App";
 import UserItemsForm from "./UserItemsForm";
 import { Box, Button, makeStyles } from "@material-ui/core";
@@ -25,7 +25,7 @@ interface UpdateStateResponse {
   success: boolean;
 }
 
-interface UpdateStateInput {
+export interface UpdateStateInput {
   userItems: UserItem[];
   packlist: Packlist;
 }
@@ -45,80 +45,55 @@ const LoggedIn = ({
   currentPacklistId,
   setCurrentPacklistId
 }: LoggedInProps) => {
+  const userItems = initialStateQuery.data?.getAuthorizedUser.userItems || [];
+  const packlists = initialStateQuery.data?.getAuthorizedUser.packlists || [];
+  const currentPacklist = packlists.find(p => p.id === currentPacklistId);
+
+  const classes = useStyles();
+
   const [updateState] = useMutation<
     UpdateStateResponse,
     UpdateStateInput
-  >(UPDATE_STATE,
-    // {
-    //   refetchQueries: [{ query: GET_INITIAL_STATE }],
-    // }
-  );
-  const userItems = initialStateQuery.data?.getAuthorizedUser.userItems || [];
-  const packlists = initialStateQuery.data?.getAuthorizedUser.packlists || [];
-
-  const classes = useStyles();
+  >(UPDATE_STATE);
 
   if (!user || initialStateQuery.loading || initialStateQuery.error) {
     return null;
   }
 
-  const Content = () => {
-    if (!currentPacklistId) {
-      return <PacklistSelector packlists={packlists} setCurrentPacklistId={setCurrentPacklistId} />;
+  const mutationCacheUpdate = (
+    store: ApolloCache<UpdateStateResponse>,
+    values: UpdateStateInput,
+  ) => {
+    const existingState = store.readQuery<InitialStateResponse>({ query: GET_INITIAL_STATE });
+    if (!existingState) {
+      return;
     }
-    const packlist = packlists.find(p => p.id === currentPacklistId);
-    if (!packlist) {
-      return <PacklistSelector packlists={packlists} setCurrentPacklistId={setCurrentPacklistId} />;
-    }
+    const updatedPacklists = existingState
+      .getAuthorizedUser
+      .packlists.map(p => p.id === values.packlist.id ? values.packlist : p);
 
-    return (
-      <Formik
-        key="outerFormik"
-        validateOnChange={false}
-        validateOnBlur={false}
-        initialValues={{ userItems, packlist }}
-        onSubmit={async (values) => {
-          try {
-            await updateState({
-              variables: { userItems: values.userItems, packlist: values.packlist },
-              update: (store, response) => {
-                const existingState = store.readQuery<InitialStateResponse>({ query: GET_INITIAL_STATE });
-                if (!existingState) {
-                  return;
-                }
-                const updatedPacklists = existingState
-                  .getAuthorizedUser
-                  .packlists.map(p => p.id === values.packlist.id ? values.packlist : p);
-                console.log(updatedPacklists);
-                console.log(values.userItems);
-                store.writeQuery({
-                  query: GET_INITIAL_STATE,
-                  data: {
-                    getAuthorizedUser: {
-                      id: user.id,
-                      userItems: values.userItems,
-                      packlists: updatedPacklists,
-                    }
-                  }
-                });
-              }
-            });
-          } catch (e) {
-            console.log(e);
-          }
-        }}
-      >
-        {
-          formikProps => (
-            <>
-              <PacklistForm formikProps={formikProps} />
-              <UserItemsForm formikProps={formikProps} />
-              <Button key="submitButton" variant="contained" onClick={formikProps.submitForm}>Update</Button>
-            </>
-          )
+    store.writeQuery({
+      query: GET_INITIAL_STATE,
+      data: {
+        getAuthorizedUser: {
+          id: user.id,
+          userItems: values.userItems,
+          packlists: updatedPacklists,
         }
-      </Formik>
-    );
+      }
+    });
+  };
+
+  const handleSubmit = async (values: UpdateStateInput) => {
+    try {
+      await updateState({
+        variables: { userItems: values.userItems, packlist: values.packlist },
+        update: store => mutationCacheUpdate(store, values),
+      }
+      );
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   return (
@@ -130,7 +105,26 @@ const LoggedIn = ({
         <Button onClick={logout}>Logout</Button>
       </Box>
 
-      <Content />
+      {!currentPacklist &&
+        <PacklistSelector packlists={packlists} setCurrentPacklistId={setCurrentPacklistId} />
+      }
+      {currentPacklist &&
+        <Formik
+          key="outerFormik"
+          validateOnChange={false}
+          validateOnBlur={false}
+          initialValues={{ userItems, packlist: currentPacklist }}
+          onSubmit={handleSubmit}
+        >
+          {formikProps => (
+            <>
+              <PacklistForm />
+              <UserItemsForm />
+              <Button key="submitButton" variant="contained" onClick={formikProps.submitForm}>Update</Button>
+            </>
+          )}
+        </Formik>
+      }
     </>
   );
 };
