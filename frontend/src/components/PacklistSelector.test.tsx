@@ -37,6 +37,10 @@ describe("PacklistSelector component", () => {
     );
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   test("renders packlist names", () => {
     const selectorList = screen.getByTestId("packlist-selector-list");
     packlists.forEach(p => {
@@ -46,8 +50,6 @@ describe("PacklistSelector component", () => {
 
   test("calls setCurrentPacklistId prop with id when packlist is selected", () => {
     packlists.forEach(p => {
-      //const button = screen.getByRole("button", { name: `/${p.name}/i` });
-      // const button = screen.getByRole("button");
       const button = screen.getByRole("button", { name: new RegExp(p.name, "i") });
 
       fireEvent.click(button);

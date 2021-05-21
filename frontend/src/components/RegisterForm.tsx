@@ -12,12 +12,17 @@ interface RegisterInput {
   password: string;
 }
 
-const useStyles = makeStyles({
-  registerContainer: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-  },
+const useStyles = makeStyles(theme => {
+  return {
+    registerContainer: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+    },
+    inputField: {
+      margin: theme.spacing(1, 0),
+    },
+  };
 });
 
 const RegisterForm = () => {
@@ -29,15 +34,15 @@ const RegisterForm = () => {
 
   const [register, result] = useMutation<
     {
-      register: {
+      createUser: {
         id: string;
       };
     },
     RegisterInput
   >(REGISTER, {
     onError: (error) => {
-      if (error?.graphQLErrors[0]?.message) {
-        console.error(error?.graphQLErrors[0]?.message);
+      if (error?.graphQLErrors) {
+        console.error(error.graphQLErrors);
       } else {
         console.error(error.message);
       }
@@ -50,7 +55,7 @@ const RegisterForm = () => {
     }
   }, [result.data, history]);
 
-  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const submit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     register({ variables: { username, email, password } });
@@ -65,6 +70,7 @@ const RegisterForm = () => {
       </Typography>
       <form onSubmit={submit}>
         <TextField
+          className={classes.inputField}
           required
           id="username"
           label="Username"
@@ -74,6 +80,7 @@ const RegisterForm = () => {
           fullWidth
         />
         <TextField
+          className={classes.inputField}
           required
           id="email"
           label="Email"
@@ -83,6 +90,7 @@ const RegisterForm = () => {
           fullWidth
         />
         <TextField
+          className={classes.inputField}
           required
           id="password"
           label="Password"
@@ -95,9 +103,12 @@ const RegisterForm = () => {
         <Button
           type="submit"
           variant="contained"
+          color="primary"
           fullWidth
         >Register</Button>
       </form>
+      {result.loading && <p>Loading</p>}
+      {result.error && <p>Error</p>}
     </Container>
   );
 };
