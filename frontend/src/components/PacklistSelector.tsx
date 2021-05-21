@@ -10,7 +10,7 @@ const PacklistSelector = ({ packlists, setCurrentPacklistId }: {
   return (
     <Box display="flex" flexDirection="column" alignItems="center">
       <Typography component="h1">Choose packlist</Typography>
-      <Box display="flex" flexDirection="column">
+      <Box data-testid="packlist-selector-list" display="flex" flexDirection="column">
         {packlists.map(p => (
           <Button key={p.id} onClick={() => setCurrentPacklistId(p.id)}>{p.name}</Button>
         ))}
