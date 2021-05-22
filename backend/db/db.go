@@ -13,14 +13,14 @@ import (
 type DB interface {
 	GetAllPacklists() ([]*model.Packlist, error)
 	CreatePacklist(input model.Packlist) (*model.Packlist, error)
-	FindOnePacklist(objectId primitive.ObjectID) (*model.Packlist, error)
+	FindOnePacklist(id string) (*model.Packlist, error)
 	GetAllUsers() ([]*model.User, error)
-	FindOneUser(objectId primitive.ObjectID) (*model.User, error)
-	FindPacklistsByUserId(userId primitive.ObjectID) ([]*model.Packlist, error)
+	FindOneUser(id string) (*model.User, error)
+	FindPacklistsByUserId(id string) ([]*model.Packlist, error)
 	CreateUser(input model.User) (*model.User, error)
 	FindUserByUsername(username string) (*model.User, error)
 	UpdateUser(user *model.User) (*model.User, error)
-	UpdateUserItems(userId primitive.ObjectID, userItems []*model.UserItemInput) error
+	UpdateUserItems(id string, userItems []*model.UserItemInput) error
 	UpdatePacklist(packlist *model.PacklistInput) error
 }
 
@@ -52,11 +52,6 @@ func (db MongoDB) GetAllPacklists() ([]*model.Packlist, error) {
 }
 
 func (db MongoDB) CreatePacklist(input model.Packlist) (*model.Packlist, error) {
-	// insertResult, err := db.packlists.InsertOne(context.TODO(), bson.D{
-	// 	{Key: "name", Value: input.Name},
-	// 	{Key: "description", Value: input.Description},
-	// 	{Key: "user", Value: input.UserID},
-	// })
 	insertResult, err := db.packlists.InsertOne(context.TODO(), input)
 	if err != nil {
 		return nil, fmt.Errorf("error inserting packlist")
@@ -65,11 +60,11 @@ func (db MongoDB) CreatePacklist(input model.Packlist) (*model.Packlist, error) 
 	if !ok {
 		return nil, fmt.Errorf("did not receive proper ObjectID for created packlist")
 	}
-	return FindPacklistById(db, objectId)
+	return FindPacklistById(db, objectId.Hex())
 }
 
-func (db MongoDB) FindOnePacklist(objectId primitive.ObjectID) (*model.Packlist, error) {
-	return FindPacklistById(db, objectId)
+func (db MongoDB) FindOnePacklist(id string) (*model.Packlist, error) {
+	return FindPacklistById(db, id)
 }
 
 func (db MongoDB) GetAllUsers() ([]*model.User, error) {
@@ -85,14 +80,19 @@ func (db MongoDB) GetAllUsers() ([]*model.User, error) {
 	return users, nil
 }
 
-func (db MongoDB) FindOneUser(objectId primitive.ObjectID) (*model.User, error) {
-	return FindUserById(db, objectId)
+func (db MongoDB) FindOneUser(id string) (*model.User, error) {
+	return FindUserById(db, id)
 }
 
-func (db MongoDB) FindPacklistsByUserId(userId primitive.ObjectID) ([]*model.Packlist, error) {
+func (db MongoDB) FindPacklistsByUserId(id string) ([]*model.Packlist, error) {
+	objectId, err := HexStringToObjectID(id)
+	if err != nil {
+		return nil, err
+	}
+
 	res, err := db.packlists.Find(context.TODO(), bson.D{{
 		Key:   "user",
-		Value: userId,
+		Value: objectId,
 	}})
 	if err != nil {
 		return nil, fmt.Errorf("error finding packlists")
@@ -118,7 +118,7 @@ func (db MongoDB) CreateUser(input model.User) (*model.User, error) {
 	if !ok {
 		return nil, fmt.Errorf("did not receive proper ObjectID for created user")
 	}
-	return FindUserById(db, objectId)
+	return FindUserById(db, objectId.Hex())
 }
 
 func (db MongoDB) FindUserByUsername(username string) (*model.User, error) {
@@ -144,13 +144,17 @@ func (db MongoDB) UpdateUser(user *model.User) (*model.User, error) {
 		return nil, err
 	}
 	if res.MatchedCount != 1 {
-		return nil, fmt.Errorf("user not found")
+		return nil, fmt.Errorf("user not found for update")
 	}
 	return user, nil
 }
 
-func (db MongoDB) UpdateUserItems(userId primitive.ObjectID, userItems []*model.UserItemInput) error {
-	res, err := db.users.UpdateByID(context.TODO(), userId,
+func (db MongoDB) UpdateUserItems(id string, userItems []*model.UserItemInput) error {
+	objectId, err := HexStringToObjectID(id)
+	if err != nil {
+		return err
+	}
+	res, err := db.users.UpdateByID(context.TODO(), objectId,
 		bson.D{
 			{"$set", bson.D{
 				{"userItems", userItems},
@@ -167,7 +171,12 @@ func (db MongoDB) UpdateUserItems(userId primitive.ObjectID, userItems []*model.
 }
 
 func (db MongoDB) UpdatePacklist(packlist *model.PacklistInput) error {
-	res, err := db.packlists.UpdateByID(context.TODO(), packlist.ID,
+	objectId, err := HexStringToObjectID(packlist.ID)
+	if err != nil {
+		return err
+	}
+
+	res, err := db.packlists.UpdateByID(context.TODO(), objectId,
 		bson.D{
 			{"$set", bson.D{
 				{"name", packlist.Name},
@@ -185,7 +194,12 @@ func (db MongoDB) UpdatePacklist(packlist *model.PacklistInput) error {
 	return nil
 }
 
-func FindPacklistById(db MongoDB, objectId primitive.ObjectID) (*model.Packlist, error) {
+func FindPacklistById(db MongoDB, id string) (*model.Packlist, error) {
+	objectId, err := HexStringToObjectID(id)
+	if err != nil {
+		return nil, err
+	}
+
 	var packlist *model.Packlist
 	findResult := db.packlists.FindOne(context.TODO(),
 		bson.D{{
@@ -199,7 +213,12 @@ func FindPacklistById(db MongoDB, objectId primitive.ObjectID) (*model.Packlist,
 	return packlist, nil
 }
 
-func FindUserById(db MongoDB, objectId primitive.ObjectID) (*model.User, error) {
+func FindUserById(db MongoDB, id string) (*model.User, error) {
+	objectId, err := HexStringToObjectID(id)
+	if err != nil {
+		return nil, err
+	}
+
 	var user *model.User
 	findResult := db.users.FindOne(context.TODO(),
 		bson.D{{
@@ -211,4 +230,12 @@ func FindUserById(db MongoDB, objectId primitive.ObjectID) (*model.User, error) 
 		return nil, fmt.Errorf("user not found")
 	}
 	return user, nil
+}
+
+func HexStringToObjectID(str string) (primitive.ObjectID, error) {
+	objectId, err := primitive.ObjectIDFromHex(str)
+	if err != nil {
+		return primitive.NilObjectID, fmt.Errorf("objectid conversion from string failed")
+	}
+	return objectId, nil
 }

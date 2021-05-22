@@ -2,10 +2,6 @@
 
 package model
 
-import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
-)
-
 type Category struct {
 	InternalID    string          `json:"internalId"`
 	Name          string          `json:"name"`
@@ -45,10 +41,10 @@ type NewPacklist struct {
 }
 
 type PacklistInput struct {
-	ID          primitive.ObjectID `json:"id"`
-	Name        string             `json:"name"`
-	Description *string            `json:"description"`
-	Categories  []*CategoryInput   `json:"categories"`
+	ID          string           `json:"id"`
+	Name        string           `json:"name"`
+	Description *string          `json:"description"`
+	Categories  []*CategoryInput `json:"categories"`
 }
 
 type UpdateResponse struct {

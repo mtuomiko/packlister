@@ -15,7 +15,6 @@ import (
 	"github.com/mtuomiko/packlister/graphql/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // region    ************************** generated!.gotpl **************************
@@ -82,8 +81,8 @@ type ComplexityRoot struct {
 	Query struct {
 		AllPacklists      func(childComplexity int) int
 		AllUsers          func(childComplexity int) int
-		FindPacklist      func(childComplexity int, id primitive.ObjectID) int
-		FindUser          func(childComplexity int, id primitive.ObjectID) int
+		FindPacklist      func(childComplexity int, id string) int
+		FindUser          func(childComplexity int, id string) int
 		GetAuthorizedUser func(childComplexity int) int
 	}
 
@@ -120,9 +119,9 @@ type PacklistResolver interface {
 }
 type QueryResolver interface {
 	AllPacklists(ctx context.Context) ([]*model.Packlist, error)
-	FindPacklist(ctx context.Context, id primitive.ObjectID) (*model.Packlist, error)
+	FindPacklist(ctx context.Context, id string) (*model.Packlist, error)
 	AllUsers(ctx context.Context) ([]*model.User, error)
-	FindUser(ctx context.Context, id primitive.ObjectID) (*model.User, error)
+	FindUser(ctx context.Context, id string) (*model.User, error)
 	GetAuthorizedUser(ctx context.Context) (*model.User, error)
 }
 type UserResolver interface {
@@ -320,7 +319,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.FindPacklist(childComplexity, args["id"].(primitive.ObjectID)), true
+		return e.complexity.Query.FindPacklist(childComplexity, args["id"].(string)), true
 
 	case "Query.findUser":
 		if e.complexity.Query.FindUser == nil {
@@ -332,7 +331,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.FindUser(childComplexity, args["id"].(primitive.ObjectID)), true
+		return e.complexity.Query.FindUser(childComplexity, args["id"].(string)), true
 
 	case "Query.getAuthorizedUser":
 		if e.complexity.Query.GetAuthorizedUser == nil {
@@ -696,10 +695,10 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_findPacklist_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 primitive.ObjectID
+	var arg0 string
 	if tmp, ok := rawArgs["id"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -711,10 +710,10 @@ func (ec *executionContext) field_Query_findPacklist_args(ctx context.Context, r
 func (ec *executionContext) field_Query_findUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 primitive.ObjectID
+	var arg0 string
 	if tmp, ok := rawArgs["id"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1266,9 +1265,9 @@ func (ec *executionContext) _Packlist_id(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(primitive.ObjectID)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNID2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Packlist_name(ctx context.Context, field graphql.CollectedField, obj *model.Packlist) (ret graphql.Marshaler) {
@@ -1468,7 +1467,7 @@ func (ec *executionContext) _Query_findPacklist(ctx context.Context, field graph
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().FindPacklist(rctx, args["id"].(primitive.ObjectID))
+		return ec.resolvers.Query().FindPacklist(rctx, args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1542,7 +1541,7 @@ func (ec *executionContext) _Query_findUser(ctx context.Context, field graphql.C
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().FindUser(rctx, args["id"].(primitive.ObjectID))
+		return ec.resolvers.Query().FindUser(rctx, args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1724,9 +1723,9 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 		}
 		return graphql.Null
 	}
-	res := resTmp.(primitive.ObjectID)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNID2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_username(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
@@ -3287,7 +3286,7 @@ func (ec *executionContext) unmarshalInputPacklistInput(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			it.ID, err = ec.unmarshalNID2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, v)
+			it.ID, err = ec.unmarshalNID2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4205,12 +4204,12 @@ func (ec *executionContext) unmarshalNCategoryItemInput2ᚖgithubᚗcomᚋmtuomi
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNID2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx context.Context, v interface{}) (primitive.ObjectID, error) {
+func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := model.UnmarshalID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNID2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx context.Context, sel ast.SelectionSet, v primitive.ObjectID) graphql.Marshaler {
+func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := model.MarshalID(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {

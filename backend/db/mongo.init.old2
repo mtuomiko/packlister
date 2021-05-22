@@ -1,5 +1,0 @@
-db.users.insert({
-    "username": "testman",
-    "email": "test@mail.com",
-    "passwordHash": "asdf"
-})

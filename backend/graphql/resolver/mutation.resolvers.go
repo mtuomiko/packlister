@@ -32,9 +32,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 		Username: input.Username,
 		Email:    input.Email,
 	}
-	fmt.Println(user)
 	err = user.SetPassword(input.Password)
-	fmt.Println(user)
 
 	if err != nil {
 		return nil, err
