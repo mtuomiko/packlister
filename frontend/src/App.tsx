@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Container, createMuiTheme, ThemeProvider, useMediaQuery, CssBaseline } from "@material-ui/core";
+import { Container, createMuiTheme, ThemeProvider, useMediaQuery, CssBaseline, AppBar, makeStyles, Box } from "@material-ui/core";
 import {
   Switch,
   Route,
@@ -14,6 +14,7 @@ import { GET_INITIAL_STATE } from "./graphql/queries";
 import { Packlist, UserItem, UserState } from "./types";
 import LoggedIn from "./components/LoggedIn";
 import DarkModeToggle from "./components/DarkModeToggle";
+import ChangePasswordForm from "./components/ChangePasswordForm";
 
 export interface InitialStateResponse {
   getAuthorizedUser: {
@@ -22,12 +23,17 @@ export interface InitialStateResponse {
   };
 }
 
+const useStyles = makeStyles(theme => ({
+  bottomBar: {
+    top: "auto",
+    bottom: 0,
+  },
+}));
+
 const App = () => {
   const [user, setUser] = useState<UserState>();
   const [darkMode, setDarkMode] = useState(useMediaQuery("(prefers-color-scheme: dark)"));
-  // const [userItems, setUserItems] = useState<UserItem[]>();
   const [currentPacklistId, setCurrentPacklistId] = useState<string>("");
-  //const [packlists, setPacklists] = useState<Packlist[]>();
 
   useEffect(() => {
     const userString = localStorage.getItem("packlister-user");
@@ -39,10 +45,6 @@ const App = () => {
   const initialStateQuery = useQuery<InitialStateResponse>(GET_INITIAL_STATE, {
     skip: !user
   });
-
-  // useEffect(() => {
-  //   setUserItems(userItemsQuery.data?.getAuthorizedUser.userItems);
-  // }, [userItemsQuery.data]);
 
   const logout = () => {
     setUser(undefined);
@@ -58,6 +60,8 @@ const App = () => {
     [darkMode]
   );
 
+  const classes = useStyles();
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -69,6 +73,9 @@ const App = () => {
               <Route path="/pack/:id">
                 <ExternalPacklist />
               </Route>
+              <Route path="/change-password">
+                <ChangePasswordForm />
+              </Route>
               <Route path="/">
                 <LoggedIn
                   logout={logout}
@@ -76,29 +83,33 @@ const App = () => {
                   initialStateQuery={initialStateQuery}
                   currentPacklistId={currentPacklistId}
                   setCurrentPacklistId={setCurrentPacklistId}
-                // setUserItems={setUserItems}
                 />
               </Route>
             </Switch>
           </div>
         }
         {!user &&
-          <div>
-            <Switch>
-              <Route path="/pack/:id">
-                <ExternalPacklist />
-              </Route>
-              <Route path="/register">
-                <RegisterForm />
-              </Route>
-              <Route path="/login">
-                <LoginForm setUser={setUser} />
-              </Route>
-              <Route path="/">
-                <Home />
-              </Route>
-            </Switch>
-          </div>
+          <>
+            <div>
+              <Switch>
+                <Route path="/pack/:id">
+                  <ExternalPacklist />
+                </Route>
+                <Route path="/register">
+                  <RegisterForm />
+                </Route>
+                <Route path="/login">
+                  <LoginForm setUser={setUser} />
+                </Route>
+                <Route path="/">
+                  <Home />
+                </Route>
+              </Switch>
+            </div>
+            <AppBar position="fixed" color="primary" className={classes.bottomBar}>
+              <Box margin={1}>Copyleft</Box>
+            </AppBar>
+          </>
         }
       </Container>
     </ThemeProvider>

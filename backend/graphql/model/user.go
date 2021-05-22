@@ -2,6 +2,7 @@ package model
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -11,6 +12,20 @@ type User struct {
 	PasswordHash string             `validate:"required" json:"-"`
 	UserItems    []*UserItem        `json:"userItems"`
 	// PacklistIDs  []primitive.ObjectID `json:"packlists" bson:"packlists"`
+}
+
+func (user *User) SetPassword(password string) error {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	user.PasswordHash = string(hashedPassword)
+	return nil
+}
+
+func (user *User) IsPasswordCorrect(password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	return err == nil
 }
 
 type NewUser struct {

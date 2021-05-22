@@ -10,6 +10,7 @@ import PacklistForm from "./PacklistForm";
 import { Formik } from "formik";
 import { UPDATE_STATE } from "../graphql/mutations";
 import { GET_INITIAL_STATE } from "../graphql/queries";
+import { useHistory } from "react-router-dom";
 
 const useStyles = makeStyles((theme) => ({
   topbar: {
@@ -48,6 +49,7 @@ const LoggedIn = ({
   const userItems = initialStateQuery.data?.getAuthorizedUser.userItems || [];
   const packlists = initialStateQuery.data?.getAuthorizedUser.packlists || [];
   const currentPacklist = packlists.find(p => p.id === currentPacklistId);
+  const history = useHistory();
 
   const classes = useStyles();
 
@@ -103,6 +105,7 @@ const LoggedIn = ({
         <div className={classes.topbarItem}>Username: {user.username}</div>
         <div className={classes.topbarItem}>Email: {user.email}</div>
         <Button onClick={logout}>Logout</Button>
+        <Button onClick={() => history.replace("/change-password")}>Change password</Button>
       </Box>
 
       {!currentPacklist &&

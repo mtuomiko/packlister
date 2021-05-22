@@ -30,6 +30,11 @@ type CategoryItemInput struct {
 	Quantity   *int   `json:"quantity"`
 }
 
+type ChangePasswordInput struct {
+	OldPassword string `json:"oldPassword"`
+	NewPassword string `json:"newPassword"`
+}
+
 type LoginResponse struct {
 	Token string `json:"token"`
 	User  *User  `json:"user"`

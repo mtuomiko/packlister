@@ -15,7 +15,7 @@ jest.mock("react-router-dom", () => ({
 }));
 
 describe("RegisterForm component", () => {
-  test("sends fields with mutation", async () => {
+  test("sends fields with mutation and redirects to login", async () => {
     let mutationCalled = false;
 
     const apolloMocks = [

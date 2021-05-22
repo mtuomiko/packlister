@@ -35,3 +35,8 @@ input UserItemInput {
   description: String
   weight: Int!
 }
+
+input ChangePasswordInput {
+  oldPassword: String!
+  newPassword: String!
+}
