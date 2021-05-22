@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/mtuomiko/packlister/graphql/model"
 	"go.mongodb.org/mongo-driver/bson"
@@ -31,7 +32,39 @@ type MongoDB struct {
 	users     *mongo.Collection
 }
 
-func New(client *mongo.Client) *MongoDB {
+var client *mongo.Client
+
+func ConnectClient(databaseURI string) {
+	clientOptions := options.Client().ApplyURI(databaseURI)
+	var err error
+	client, err = mongo.Connect(context.TODO(), clientOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Check the connection
+	err = client.Ping(context.TODO(), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Connected to MongoDB!")
+}
+
+func DisconnectClient() {
+	if client == nil {
+		return
+	}
+	err := client.Disconnect(context.TODO())
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Disconnected from MongoDB")
+}
+
+func New() *MongoDB {
+	if client == nil {
+		return nil
+	}
 	packlists := client.Database("packlister").Collection("packlists")
 	users := client.Database("packlister").Collection("users")
 	return &MongoDB{
@@ -126,7 +159,8 @@ func (db MongoDB) CreateUser(input model.User) (*model.User, error) {
 		{Key: "passwordHash", Value: input.PasswordHash},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error inserting user")
+		// return nil, fmt.Errorf("error inserting user")
+		return nil, err
 	}
 	objectId, ok := insertResult.InsertedID.(primitive.ObjectID)
 	if !ok {
