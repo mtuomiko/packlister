@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type DB interface {
@@ -22,6 +23,7 @@ type DB interface {
 	UpdateUser(user *model.User) (*model.User, error)
 	UpdateUserItems(id string, userItems []*model.UserItemInput) error
 	UpdatePacklist(packlist *model.PacklistInput) error
+	EnsureIndexes() error
 }
 
 type MongoDB struct {
@@ -36,6 +38,18 @@ func New(client *mongo.Client) *MongoDB {
 		packlists: packlists,
 		users:     users,
 	}
+}
+
+func (db MongoDB) EnsureIndexes() error {
+	indexModels := []mongo.IndexModel{
+		CreateUniqueIndexModel("username"),
+		CreateUniqueIndexModel("email"),
+	}
+	_, err := db.users.Indexes().CreateMany(context.TODO(), indexModels)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (db MongoDB) GetAllPacklists() ([]*model.Packlist, error) {
@@ -60,11 +74,11 @@ func (db MongoDB) CreatePacklist(input model.Packlist) (*model.Packlist, error) 
 	if !ok {
 		return nil, fmt.Errorf("did not receive proper ObjectID for created packlist")
 	}
-	return FindPacklistById(db, objectId.Hex())
+	return findPacklistById(db, objectId.Hex())
 }
 
 func (db MongoDB) FindOnePacklist(id string) (*model.Packlist, error) {
-	return FindPacklistById(db, id)
+	return findPacklistById(db, id)
 }
 
 func (db MongoDB) GetAllUsers() ([]*model.User, error) {
@@ -81,11 +95,11 @@ func (db MongoDB) GetAllUsers() ([]*model.User, error) {
 }
 
 func (db MongoDB) FindOneUser(id string) (*model.User, error) {
-	return FindUserById(db, id)
+	return findUserById(db, id)
 }
 
 func (db MongoDB) FindPacklistsByUserId(id string) ([]*model.Packlist, error) {
-	objectId, err := HexStringToObjectID(id)
+	objectId, err := hexStringToObjectID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +132,7 @@ func (db MongoDB) CreateUser(input model.User) (*model.User, error) {
 	if !ok {
 		return nil, fmt.Errorf("did not receive proper ObjectID for created user")
 	}
-	return FindUserById(db, objectId.Hex())
+	return findUserById(db, objectId.Hex())
 }
 
 func (db MongoDB) FindUserByUsername(username string) (*model.User, error) {
@@ -150,7 +164,7 @@ func (db MongoDB) UpdateUser(user *model.User) (*model.User, error) {
 }
 
 func (db MongoDB) UpdateUserItems(id string, userItems []*model.UserItemInput) error {
-	objectId, err := HexStringToObjectID(id)
+	objectId, err := hexStringToObjectID(id)
 	if err != nil {
 		return err
 	}
@@ -171,7 +185,7 @@ func (db MongoDB) UpdateUserItems(id string, userItems []*model.UserItemInput) e
 }
 
 func (db MongoDB) UpdatePacklist(packlist *model.PacklistInput) error {
-	objectId, err := HexStringToObjectID(packlist.ID)
+	objectId, err := hexStringToObjectID(packlist.ID)
 	if err != nil {
 		return err
 	}
@@ -194,8 +208,8 @@ func (db MongoDB) UpdatePacklist(packlist *model.PacklistInput) error {
 	return nil
 }
 
-func FindPacklistById(db MongoDB, id string) (*model.Packlist, error) {
-	objectId, err := HexStringToObjectID(id)
+func findPacklistById(db MongoDB, id string) (*model.Packlist, error) {
+	objectId, err := hexStringToObjectID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -213,8 +227,8 @@ func FindPacklistById(db MongoDB, id string) (*model.Packlist, error) {
 	return packlist, nil
 }
 
-func FindUserById(db MongoDB, id string) (*model.User, error) {
-	objectId, err := HexStringToObjectID(id)
+func findUserById(db MongoDB, id string) (*model.User, error) {
+	objectId, err := hexStringToObjectID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -232,10 +246,20 @@ func FindUserById(db MongoDB, id string) (*model.User, error) {
 	return user, nil
 }
 
-func HexStringToObjectID(str string) (primitive.ObjectID, error) {
+func hexStringToObjectID(str string) (primitive.ObjectID, error) {
 	objectId, err := primitive.ObjectIDFromHex(str)
 	if err != nil {
 		return primitive.NilObjectID, fmt.Errorf("objectid conversion from string failed")
 	}
 	return objectId, nil
+}
+
+func CreateUniqueIndexModel(field string) mongo.IndexModel {
+	return mongo.IndexModel{
+		Keys: bson.D{{
+			Key:   field,
+			Value: 1,
+		}},
+		Options: options.Index().SetUnique(true),
+	}
 }

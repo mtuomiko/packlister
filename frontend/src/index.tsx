@@ -8,7 +8,11 @@ import { setContext } from "@apollo/client/link/context";
 import { BrowserRouter } from "react-router-dom";
 import omitDeep from "./omitDeep";
 
-const httpLink = new HttpLink({ uri: "http://localhost:8080/query" });
+const graphqlUri = process.env.NODE_ENV === "production"
+  ? "/query"
+  : "http://localhost:5000/query";
+
+const httpLink = new HttpLink({ uri: graphqlUri });
 
 const cleanTypenameLink = new ApolloLink((operation, forward) => {
   if (operation.variables && !operation.variables.file) {

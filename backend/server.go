@@ -20,23 +20,27 @@ import (
 	"github.com/mtuomiko/packlister/graphql/resolver"
 )
 
-const defaultPort = "8080"
+type Config struct {
+	Port        string
+	DatabaseURI string
+	JwtSecret   string
+}
+
+var cfg Config
 
 func main() {
 	_ = godotenv.Load()
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = defaultPort
+	cfg = Config{
+		Port:        getEnvOrDefault("PORT", "5000"),
+		DatabaseURI: getEnvOrDefault("MONGODB_URI", "mongodb://localhost:27017"),
+		JwtSecret:   os.Getenv("JWT_SECRET"),
 	}
-
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
+	if cfg.JwtSecret == "" {
 		log.Fatal("JWT_SECRET env var not present or empty")
 	}
 
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-	log.Printf("Connecting to %s", clientOptions.GetURI())
+	clientOptions := options.Client().ApplyURI(cfg.DatabaseURI)
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 	if err != nil {
 		log.Fatal(err)
@@ -51,8 +55,14 @@ func main() {
 	defer client.Disconnect(context.TODO())
 
 	jwt := auth.JwtWrapper{
-		SecretKey:       os.Getenv("JWT_SECRET"),
+		SecretKey:       cfg.JwtSecret,
 		ExpirationHours: 240,
+	}
+
+	// Check that unique indexes are in place
+	mongoService := db.New(client)
+	if err := mongoService.EnsureIndexes(); err != nil {
+		log.Fatal(err)
 	}
 
 	corsConfig := cors.DefaultConfig()
@@ -65,9 +75,9 @@ func main() {
 	router.Use(auth.AuthMiddleware(jwt))
 	router.Use(GinContextToContextMiddleware())
 
-	router.POST("/query", gqlHandler(db.New(client), jwt))
+	router.POST("/query", gqlHandler(mongoService, jwt))
 	router.GET("/", playgroundHandler())
-	router.Run(":" + port)
+	router.Run(":" + cfg.Port)
 }
 
 func gqlHandler(db db.DB, jwt auth.JwtWrapper) gin.HandlerFunc {
@@ -99,4 +109,11 @@ func GinContextToContextMiddleware() gin.HandlerFunc {
 		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}
+}
+
+func getEnvOrDefault(envKey string, defaultStr string) string {
+	if env, ok := os.LookupEnv(envKey); ok {
+		return env
+	}
+	return defaultStr
 }
