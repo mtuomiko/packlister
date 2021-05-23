@@ -9,15 +9,18 @@ import (
 	jwt "gopkg.in/dgrijalva/jwt-go.v3"
 
 	"github.com/mtuomiko/packlister/graphql/model"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Settings
 type JwtWrapper struct {
 	SecretKey       string
 	ExpirationHours int64
 }
 
+// Token contents
 type JwtClaim struct {
-	UserID   string
+	UserID   primitive.ObjectID
 	Username string
 	Email    string
 	jwt.StandardClaims

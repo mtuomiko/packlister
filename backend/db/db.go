@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/mtuomiko/packlister/graphql/model"
 	"go.mongodb.org/mongo-driver/bson"
@@ -15,16 +14,15 @@ import (
 type DB interface {
 	GetAllPacklists() ([]*model.Packlist, error)
 	CreatePacklist(input model.Packlist) (*model.Packlist, error)
-	FindOnePacklist(id string) (*model.Packlist, error)
+	FindOnePacklist(id primitive.ObjectID) (*model.Packlist, error)
 	GetAllUsers() ([]*model.User, error)
-	FindOneUser(id string) (*model.User, error)
-	FindPacklistsByUserId(id string) ([]*model.Packlist, error)
+	FindOneUser(id primitive.ObjectID) (*model.User, error)
+	FindPacklistsByUserId(id primitive.ObjectID) ([]*model.Packlist, error)
 	CreateUser(input model.User) (*model.User, error)
 	FindUserByUsername(username string) (*model.User, error)
 	UpdateUser(user *model.User) (*model.User, error)
-	UpdateUserItems(id string, userItems []*model.UserItemInput) error
+	UpdateUserItems(id primitive.ObjectID, userItems []*model.UserItemInput) error
 	UpdatePacklist(packlist *model.PacklistInput) error
-	EnsureIndexes() error
 }
 
 type MongoDB struct {
@@ -34,31 +32,31 @@ type MongoDB struct {
 
 var client *mongo.Client
 
-func ConnectClient(databaseURI string) {
+func ConnectClient(databaseURI string) error {
 	clientOptions := options.Client().ApplyURI(databaseURI)
 	var err error
 	client, err = mongo.Connect(context.TODO(), clientOptions)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	// Check the connection
 	err = client.Ping(context.TODO(), nil)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	log.Println("Connected to MongoDB!")
+	return nil
 }
 
-func DisconnectClient() {
+func DisconnectClient() error {
 	if client == nil {
-		return
+		return fmt.Errorf("no client to disconnect")
 	}
 	err := client.Disconnect(context.TODO())
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	log.Println("Disconnected from MongoDB")
+	return nil
 }
 
 func New() *MongoDB {
@@ -71,6 +69,10 @@ func New() *MongoDB {
 		packlists: packlists,
 		users:     users,
 	}
+}
+
+func GetClient() *mongo.Client {
+	return client
 }
 
 func (db MongoDB) EnsureIndexes() error {
@@ -103,14 +105,14 @@ func (db MongoDB) CreatePacklist(input model.Packlist) (*model.Packlist, error) 
 	if err != nil {
 		return nil, fmt.Errorf("error inserting packlist")
 	}
-	objectId, ok := insertResult.InsertedID.(primitive.ObjectID)
+	id, ok := insertResult.InsertedID.(primitive.ObjectID)
 	if !ok {
 		return nil, fmt.Errorf("did not receive proper ObjectID for created packlist")
 	}
-	return findPacklistById(db, objectId.Hex())
+	return findPacklistById(db, id)
 }
 
-func (db MongoDB) FindOnePacklist(id string) (*model.Packlist, error) {
+func (db MongoDB) FindOnePacklist(id primitive.ObjectID) (*model.Packlist, error) {
 	return findPacklistById(db, id)
 }
 
@@ -127,19 +129,14 @@ func (db MongoDB) GetAllUsers() ([]*model.User, error) {
 	return users, nil
 }
 
-func (db MongoDB) FindOneUser(id string) (*model.User, error) {
+func (db MongoDB) FindOneUser(id primitive.ObjectID) (*model.User, error) {
 	return findUserById(db, id)
 }
 
-func (db MongoDB) FindPacklistsByUserId(id string) ([]*model.Packlist, error) {
-	objectId, err := hexStringToObjectID(id)
-	if err != nil {
-		return nil, err
-	}
-
+func (db MongoDB) FindPacklistsByUserId(id primitive.ObjectID) ([]*model.Packlist, error) {
 	res, err := db.packlists.Find(context.TODO(), bson.D{{
 		Key:   "user",
-		Value: objectId,
+		Value: id,
 	}})
 	if err != nil {
 		return nil, fmt.Errorf("error finding packlists")
@@ -162,11 +159,11 @@ func (db MongoDB) CreateUser(input model.User) (*model.User, error) {
 		// return nil, fmt.Errorf("error inserting user")
 		return nil, err
 	}
-	objectId, ok := insertResult.InsertedID.(primitive.ObjectID)
+	id, ok := insertResult.InsertedID.(primitive.ObjectID)
 	if !ok {
 		return nil, fmt.Errorf("did not receive proper ObjectID for created user")
 	}
-	return findUserById(db, objectId.Hex())
+	return findUserById(db, id)
 }
 
 func (db MongoDB) FindUserByUsername(username string) (*model.User, error) {
@@ -197,12 +194,8 @@ func (db MongoDB) UpdateUser(user *model.User) (*model.User, error) {
 	return user, nil
 }
 
-func (db MongoDB) UpdateUserItems(id string, userItems []*model.UserItemInput) error {
-	objectId, err := hexStringToObjectID(id)
-	if err != nil {
-		return err
-	}
-	res, err := db.users.UpdateByID(context.TODO(), objectId,
+func (db MongoDB) UpdateUserItems(id primitive.ObjectID, userItems []*model.UserItemInput) error {
+	res, err := db.users.UpdateByID(context.TODO(), id,
 		bson.D{
 			{"$set", bson.D{
 				{"userItems", userItems},
@@ -219,12 +212,7 @@ func (db MongoDB) UpdateUserItems(id string, userItems []*model.UserItemInput) e
 }
 
 func (db MongoDB) UpdatePacklist(packlist *model.PacklistInput) error {
-	objectId, err := hexStringToObjectID(packlist.ID)
-	if err != nil {
-		return err
-	}
-
-	res, err := db.packlists.UpdateByID(context.TODO(), objectId,
+	res, err := db.packlists.UpdateByID(context.TODO(), packlist.ID,
 		bson.D{
 			{"$set", bson.D{
 				{"name", packlist.Name},
@@ -242,17 +230,12 @@ func (db MongoDB) UpdatePacklist(packlist *model.PacklistInput) error {
 	return nil
 }
 
-func findPacklistById(db MongoDB, id string) (*model.Packlist, error) {
-	objectId, err := hexStringToObjectID(id)
-	if err != nil {
-		return nil, err
-	}
-
+func findPacklistById(db MongoDB, id primitive.ObjectID) (*model.Packlist, error) {
 	var packlist *model.Packlist
 	findResult := db.packlists.FindOne(context.TODO(),
 		bson.D{{
 			Key:   "_id",
-			Value: objectId,
+			Value: id,
 		}},
 	)
 	if err := findResult.Decode(&packlist); err != nil {
@@ -261,31 +244,18 @@ func findPacklistById(db MongoDB, id string) (*model.Packlist, error) {
 	return packlist, nil
 }
 
-func findUserById(db MongoDB, id string) (*model.User, error) {
-	objectId, err := hexStringToObjectID(id)
-	if err != nil {
-		return nil, err
-	}
-
+func findUserById(db MongoDB, id primitive.ObjectID) (*model.User, error) {
 	var user *model.User
 	findResult := db.users.FindOne(context.TODO(),
 		bson.D{{
 			Key:   "_id",
-			Value: objectId,
+			Value: id,
 		}},
 	)
 	if err := findResult.Decode(&user); err != nil {
 		return nil, fmt.Errorf("user not found")
 	}
 	return user, nil
-}
-
-func hexStringToObjectID(str string) (primitive.ObjectID, error) {
-	objectId, err := primitive.ObjectIDFromHex(str)
-	if err != nil {
-		return primitive.NilObjectID, fmt.Errorf("objectid conversion from string failed")
-	}
-	return objectId, nil
 }
 
 func CreateUniqueIndexModel(field string) mongo.IndexModel {

@@ -1,8 +1,10 @@
-package main
+package config
 
 import (
 	"log"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -13,6 +15,8 @@ type Config struct {
 }
 
 func GetConfig() Config {
+	_ = godotenv.Load()
+
 	env := getEnvOrDefault("PACKLISTER_ENV", "development")
 
 	var databaseURI string

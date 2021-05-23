@@ -12,9 +12,9 @@ import (
 )
 
 type Resolver struct {
-	DB        db.DB
+	DB        db.DB               // Interface
 	Validator *validator.Validate // Validator docs suggest using single instance to allow struct caching
-	Jwt       auth.JwtWrapper
+	Jwt       *auth.JwtWrapper
 }
 
 func GinContextFromContext(ctx context.Context) (*gin.Context, error) {
