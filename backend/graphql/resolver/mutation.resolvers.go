@@ -63,7 +63,7 @@ func (r *mutationResolver) Login(ctx context.Context, credentials model.LoginInp
 	return &token, nil
 }
 
-func (r *mutationResolver) UpdateState(ctx context.Context, userItems []*model.UserItemInput, packlist *model.PacklistInput) (*model.UpdateResponse, error) {
+func (r *mutationResolver) UpdateState(ctx context.Context, userItems []*model.UserItemInput, packlists []*model.PacklistInput) (*model.UpdateResponse, error) {
 	claims, err := GetClaimsFromGinContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("auth failed")
@@ -72,7 +72,13 @@ func (r *mutationResolver) UpdateState(ctx context.Context, userItems []*model.U
 	if err != nil {
 		return nil, err
 	}
-	if packlist != nil {
+	// if packlist != nil {
+	// 	err = r.DB.UpdatePacklist(packlist)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// }
+	for _, packlist := range packlists {
 		err = r.DB.UpdatePacklist(packlist)
 		if err != nil {
 			return nil, err

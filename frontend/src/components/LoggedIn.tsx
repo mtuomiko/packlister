@@ -1,26 +1,11 @@
 import React from "react";
-
-import { Packlist, UserItem, UserState } from "../types";
+import { Packlist, UserItem } from "../types";
 import { ApolloCache, OperationVariables, QueryResult, useMutation } from "@apollo/client";
-import { InitialStateResponse } from "../App";
-import UserItemsForm from "./UserItemsForm";
-import { Box, Button, makeStyles } from "@material-ui/core";
-import PacklistSelector from "./PacklistSelector";
-import PacklistForm from "./PacklistForm";
 import { Formik } from "formik";
 import { UPDATE_STATE } from "../graphql/mutations";
 import { GET_INITIAL_STATE } from "../graphql/queries";
-import { useHistory } from "react-router-dom";
-
-const useStyles = makeStyles((theme) => ({
-  topbar: {
-    display: "flex",
-    justifyContent: "flex-end"
-  },
-  topbarItem: {
-    margin: theme.spacing(1)
-  }
-}));
+import { InitialStateResponse } from "../App";
+import MainDisplay from "./MainDisplay";
 
 interface UpdateStateResponse {
   success: boolean;
@@ -28,39 +13,26 @@ interface UpdateStateResponse {
 
 export interface UpdateStateInput {
   userItems: UserItem[];
-  packlist: Packlist;
+  packlists: Packlist[];
 }
 
 interface LoggedInProps {
-  logout: () => void;
-  user: UserState | undefined;
   initialStateQuery: QueryResult<InitialStateResponse, OperationVariables>;
-  currentPacklistId: string;
-  setCurrentPacklistId: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const LoggedIn = ({
-  logout,
-  user,
-  initialStateQuery,
-  currentPacklistId,
-  setCurrentPacklistId
-}: LoggedInProps) => {
-  const userItems = initialStateQuery.data?.getAuthorizedUser.userItems || [];
-  const packlists = initialStateQuery.data?.getAuthorizedUser.packlists || [];
-  const currentPacklist = packlists.find(p => p.id === currentPacklistId);
-  const history = useHistory();
-
-  const classes = useStyles();
-
+const LoggedIn = ({ initialStateQuery }: LoggedInProps) => {
   const [updateState] = useMutation<
     UpdateStateResponse,
     UpdateStateInput
   >(UPDATE_STATE);
 
-  if (!user || initialStateQuery.loading || initialStateQuery.error) {
+  const user = initialStateQuery.data?.getAuthorizedUser;
+  if (initialStateQuery.loading || initialStateQuery.error || !user) {
     return null;
   }
+
+  const userItems = user.userItems;
+  const packlists = user.packlists;
 
   const mutationCacheUpdate = (
     store: ApolloCache<UpdateStateResponse>,
@@ -70,17 +42,16 @@ const LoggedIn = ({
     if (!existingState) {
       return;
     }
-    const updatedPacklists = existingState
-      .getAuthorizedUser
-      .packlists.map(p => p.id === values.packlist.id ? values.packlist : p);
 
     store.writeQuery({
       query: GET_INITIAL_STATE,
       data: {
         getAuthorizedUser: {
           id: user.id,
+          username: user.username,
+          email: user.email,
           userItems: values.userItems,
-          packlists: updatedPacklists,
+          packlists: values.packlists,
         }
       }
     });
@@ -89,7 +60,7 @@ const LoggedIn = ({
   const handleSubmit = async (values: UpdateStateInput) => {
     try {
       await updateState({
-        variables: { userItems: values.userItems, packlist: values.packlist },
+        variables: { userItems: values.userItems, packlists: values.packlists },
         update: store => mutationCacheUpdate(store, values),
       }
       );
@@ -99,36 +70,17 @@ const LoggedIn = ({
   };
 
   return (
-    <>
-      <Box className={classes.topbar}>
-        <div className={classes.topbarItem}>UserID: {user.id}</div>
-        <div className={classes.topbarItem}>Username: {user.username}</div>
-        <div className={classes.topbarItem}>Email: {user.email}</div>
-        <Button onClick={logout}>Logout</Button>
-        <Button onClick={() => history.replace("/change-password")}>Change password</Button>
-      </Box>
-
-      {!currentPacklist &&
-        <PacklistSelector packlists={packlists} setCurrentPacklistId={setCurrentPacklistId} />
-      }
-      {currentPacklist &&
-        <Formik
-          key="outerFormik"
-          validateOnChange={false}
-          validateOnBlur={false}
-          initialValues={{ userItems, packlist: currentPacklist }}
-          onSubmit={handleSubmit}
-        >
-          {formikProps => (
-            <>
-              <PacklistForm />
-              <UserItemsForm />
-              <Button key="submitButton" variant="contained" onClick={formikProps.submitForm}>Update</Button>
-            </>
-          )}
-        </Formik>
-      }
-    </>
+    <Formik
+      key="outerFormik"
+      validateOnChange={false}
+      validateOnBlur={false}
+      initialValues={{ userItems, packlists }}
+      onSubmit={handleSubmit}
+    >
+      {formikProps => (
+        <MainDisplay />
+      )}
+    </Formik>
   );
 };
 

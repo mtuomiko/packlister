@@ -1,12 +1,13 @@
 import React from "react";
-import { Box, Button, Grid, IconButton, makeStyles, TextField, Typography } from "@material-ui/core";
+import { Box, Button, Grid, IconButton, makeStyles, Typography } from "@material-ui/core";
 import { AddCircle, Delete, Reorder } from "@material-ui/icons";
-import { FieldArray, FieldArrayRenderProps, useFormikContext } from "formik";
+import { FastField, FieldArray, FieldArrayRenderProps, useFormikContext } from "formik";
 import { Draggable, Droppable } from "react-beautiful-dnd";
 import { Category, CategoryItem, UserItem } from "../types";
 import PacklistFormItem from "./PacklistFormItem";
 import { nanoid } from "nanoid";
 import { UpdateStateInput } from "./LoggedIn";
+import FormTextField from "./FormTextField";
 
 const useStyles = makeStyles((theme) => ({
   categoryContainer: {
@@ -23,12 +24,13 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 interface Props {
+  packlistIndex: number;
   category: Category;
   categoryIndex: number;
   categoryArrayHelpers: FieldArrayRenderProps;
 }
 
-const PacklistFormCategory = ({ category, categoryIndex, categoryArrayHelpers }: Props) => {
+const PacklistFormCategory = ({ packlistIndex, category, categoryIndex, categoryArrayHelpers }: Props) => {
   const formikContext = useFormikContext<UpdateStateInput>();
 
   const addCategoryItem = (helpers: FieldArrayRenderProps) => {
@@ -65,12 +67,10 @@ const PacklistFormCategory = ({ category, categoryIndex, categoryArrayHelpers }:
               </Box>
             </Grid>
             <Grid item xs={8}>
-              <TextField
-                name={`packlist.categories.${categoryIndex}.name`}
+              <FastField
+                name={`packlists.${packlistIndex}.categories.${categoryIndex}.name`}
                 placeholder="Category name"
-                onChange={formikContext.handleChange}
-                onBlur={formikContext.handleBlur}
-                value={category.name}
+                component={FormTextField}
                 fullWidth
                 InputProps={{ classes: { root: classes.categoryNameInput } }}
               />
@@ -90,7 +90,7 @@ const PacklistFormCategory = ({ category, categoryIndex, categoryArrayHelpers }:
               </IconButton>
             </Grid>
           </Grid>
-          <FieldArray name={`packlist.categories.${categoryIndex}.categoryItems`}
+          <FieldArray name={`packlists.${packlistIndex}.categories.${categoryIndex}.categoryItems`}
             render={(itemArrayHelpers) => (
               <div>
                 <Droppable droppableId={`itemDroppable-${categoryIndex}`} type="droppableItem">
@@ -99,9 +99,10 @@ const PacklistFormCategory = ({ category, categoryIndex, categoryArrayHelpers }:
                       ref={itemDropProvided.innerRef}
                       {...itemDropProvided.droppableProps}
                     >
-                      {formikContext.values.packlist.categories[categoryIndex].categoryItems.map((item, itemIndex) => (
+                      {formikContext.values.packlists[packlistIndex].categories[categoryIndex].categoryItems.map((item, itemIndex) => (
                         <PacklistFormItem
                           key={item.internalId}
+                          packlistIndex={packlistIndex}
                           item={item}
                           categoryIndex={categoryIndex}
                           itemIndex={itemIndex}
@@ -125,7 +126,7 @@ const PacklistFormCategory = ({ category, categoryIndex, categoryArrayHelpers }:
                   </Grid>
                   <Grid item xs={1}>
                     <Typography className={classes.categoryNameInput}>
-                      {formikContext.values.packlist.categories[categoryIndex].categoryItems.reduce(
+                      {formikContext.values.packlists[packlistIndex].categories[categoryIndex].categoryItems.reduce(
                         (acc, val) => {
                           const qty = val.quantity;
                           const weight = formikContext.values.userItems.find(i => i.internalId === val.userItemId)?.weight || 0;

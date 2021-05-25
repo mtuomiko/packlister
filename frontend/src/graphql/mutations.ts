@@ -29,8 +29,8 @@ export const REGISTER = gql`
 `;
 
 export const UPDATE_STATE = gql`
-  mutation updateState($userItems: [UserItemInput!]!, $packlist: PacklistInput!) {
-    updateState(userItems: $userItems, packlist: $packlist) {
+  mutation updateState($userItems: [UserItemInput!]!, $packlists: [PacklistInput!]!) {
+    updateState(userItems: $userItems, packlists: $packlists) {
       success
     }
   }
@@ -41,6 +41,16 @@ export const CHANGE_PASSWORD = gql`
     changePassword(passwords: {
       oldPassword: $oldPassword,
       newPassword: $newPassword,
+    }) {
+      id
+    }
+  }
+`;
+
+export const CREATE_PACKLIST = gql`
+  mutation createPacklist($name: String!) {
+    createPacklist(input: {
+      name: $name
     }) {
       id
     }

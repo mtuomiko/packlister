@@ -4,8 +4,9 @@ import { Button, Container, TextField, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 
 import { LOGIN } from "../graphql/mutations";
-import { UserState } from "../types";
 import { useHistory } from "react-router-dom";
+import { userStorageVar } from "../cache";
+import { UserState } from "../types";
 
 interface LoginInput {
   username: string;
@@ -20,9 +21,7 @@ const useStyles = makeStyles({
   },
 });
 
-const LoginForm = ({ setUser }: {
-  setUser: React.Dispatch<React.SetStateAction<UserState | undefined>>;
-}) => {
+const LoginForm = () => {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const history = useHistory();
@@ -52,12 +51,13 @@ const LoginForm = ({ setUser }: {
   useEffect(() => {
     if (result.data) {
       const { token, user } = result.data.login;
-      const userState = { token, ...user };
-      setUser(userState);
+      const userState: UserState = { token, ...user };
+
       localStorage.setItem("packlister-user", JSON.stringify(userState));
+      userStorageVar(userState);
       history.replace("/");
     }
-  }, [result.data, setUser, history]);
+  }, [result.data, history]);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

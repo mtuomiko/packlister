@@ -3,6 +3,16 @@ import { render, screen, fireEvent } from "@testing-library/react";
 
 import PacklistSelector from "./PacklistSelector";
 import { Packlist } from "../types";
+import { MockedProvider } from "@apollo/client/testing";
+
+const mockSetFieldValue = jest.fn();
+
+jest.mock("formik", () => ({
+  useFormikContext: () => ({
+    setFieldValue: mockSetFieldValue,
+    values: {},
+  }),
+}));
 
 describe("PacklistSelector component", () => {
   const packlists: Packlist[] = [
@@ -26,14 +36,13 @@ describe("PacklistSelector component", () => {
     },
   ];
 
-  const mockSetState = jest.fn();
-
   beforeEach(() => {
     render(
-      <PacklistSelector
-        packlists={packlists}
-        setCurrentPacklistId={mockSetState}
-      />
+      <MockedProvider addTypename={false}>
+        <PacklistSelector
+          packlists={packlists}
+        />
+      </MockedProvider>
     );
   });
 
@@ -42,23 +51,24 @@ describe("PacklistSelector component", () => {
   });
 
   test("renders packlist names", () => {
-    const selectorList = screen.getByTestId("packlist-selector-list");
+    const packlistList = screen.getByTestId("packlist-list");
     packlists.forEach(p => {
-      expect(selectorList).toHaveTextContent(p.name);
+      expect(packlistList).toHaveTextContent(p.name);
     });
   });
 
-  test("calls setCurrentPacklistId prop with id when packlist is selected", () => {
+  test("calls Formik setFieldValue with packlist data when packlist is selected", () => {
     packlists.forEach(p => {
-      const button = screen.getByRole("button", { name: new RegExp(p.name, "i") });
+      const button = screen.getByRole("menuitem", { name: new RegExp(p.name, "i") });
 
       fireEvent.click(button);
     });
 
-    expect(mockSetState.mock.calls.length).toBe(packlists.length);
+    expect(mockSetFieldValue.mock.calls.length).toBe(packlists.length);
 
     packlists.forEach((p, i) => {
-      expect(mockSetState.mock.calls[i][0]).toBe(p.id);
+      expect(mockSetFieldValue.mock.calls[i][0]).toBe("packlist");
+      expect(mockSetFieldValue.mock.calls[i][1]).toEqual(p);
     });
   });
 });

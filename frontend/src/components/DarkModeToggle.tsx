@@ -11,7 +11,7 @@ const DarkModeToggle = ({ darkMode, setDarkMode }: Props) => {
   const icon = darkMode ? <WbSunny /> : <Brightness2 />;
 
   return (
-    <IconButton onClick={() => setDarkMode(!darkMode)}>
+    <IconButton color="inherit" onClick={() => setDarkMode(!darkMode)}>
       {icon}
     </IconButton>
   );

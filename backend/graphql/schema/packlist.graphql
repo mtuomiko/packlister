@@ -1,7 +1,7 @@
 type Packlist {
   id: ID!
   name: String!
-  description: String
+  description: String!
   user: User!
   categories: [Category!]! @goField(forceResolver: true)
 }

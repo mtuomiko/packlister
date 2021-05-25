@@ -5,14 +5,12 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/mtuomiko/packlister/graphql/generated"
 	"github.com/mtuomiko/packlister/graphql/model"
 )
 
 func (r *userResolver) Packlists(ctx context.Context, obj *model.User) ([]*model.Packlist, error) {
-	fmt.Println("doing this")
 	return r.DB.FindPacklistsByUserId(obj.ID)
 }
 

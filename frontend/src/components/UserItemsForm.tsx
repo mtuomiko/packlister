@@ -1,56 +1,112 @@
 import React from "react";
-import { IconButton, TextField, Typography } from "@material-ui/core";
-import { Delete } from "@material-ui/icons";
-import { FieldArray, FieldArrayRenderProps, Form, useFormikContext } from "formik";
+import { Card, CardHeader, createStyles, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText, makeStyles, Typography } from "@material-ui/core";
+import { Delete, Reorder } from "@material-ui/icons";
+import { FieldArray, FieldArrayRenderProps, useFormikContext } from "formik";
 
 import { UpdateStateInput } from "./LoggedIn";
 
+const useStyles = makeStyles(theme =>
+  createStyles({
+    root: {
+      position: "relative",
+      overflow: "auto",
+      height: "100%",
+    },
+    subHeader: {
+      backgroundColor: theme.palette.background.paper,
+    },
+  }),
+);
+
 const UserItemsForm = () => {
   const formikContext = useFormikContext<UpdateStateInput>();
-  const removeItem = (helpers: FieldArrayRenderProps, index: number) => {
-    const userItem = formikContext.values.userItems[index];
-    const categories = formikContext.values.packlist.categories;
 
-    const newCategories = categories.map(c => {
-      const { categoryItems, ...rest } = c;
-      const newCategoryItems = categoryItems.filter(i => i.userItemId !== userItem.internalId);
+  const removeItem = (helpers: FieldArrayRenderProps, index: number) => {
+
+    const userItem = formikContext.values.userItems[index];
+    // const categories = formikContext.values?.packlist?.categories;
+
+    const packlists = formikContext.values.packlists;
+    const newPacklists = packlists.map(packlist => {
+      const { categories, ...packlistOthers } = packlist;
+      const newCategories = categories.map(category => {
+        const { categoryItems, ...categoryOthers } = category;
+        const newCategoryItems = categoryItems.filter(i => i.userItemId !== userItem.internalId);
+        return {
+          ...categoryOthers,
+          categoryItems: newCategoryItems,
+        };
+      });
       return {
-        ...rest,
-        categoryItems: newCategoryItems,
+        ...packlistOthers,
+        categories: newCategories,
       };
     });
 
-    formikContext.setFieldValue("packlist.categories", newCategories);
+    formikContext.setFieldValue("packlists", newPacklists);
+    // if (categories) {
+    //   const newCategories = categories.map(c => {
+    //     const { categoryItems, ...rest } = c;
+    //     const newCategoryItems = categoryItems.filter(i => i.userItemId !== userItem.internalId);
+    //     return {
+    //       ...rest,
+    //       categoryItems: newCategoryItems,
+    //     };
+    //   });
+
+    //   formikContext.setFieldValue("packlist.categories", newCategories);
+    // }
+
     helpers.remove(index);
   };
 
+  const classes = useStyles();
+
   return (
-    <div>
-      <Typography variant="h4">User items</Typography>
-      <Form>
+    <div className={classes.root}>
+      <Card>
+        <CardHeader
+          title="Your items"
+        />
+      </Card>
+      <List disablePadding dense>
         <FieldArray name="userItems"
           render={(arrayHelpers) => (
-            <div>
+            <>
               {formikContext.values.userItems.map((item, index) => (
-                <div key={item.internalId}>
-                  <TextField
-                    value={item.name}
-                  />
-                  <TextField
-                    value={item.description}
-                  />
-                  <TextField
-                    value={item.weight}
-                  />
-                  <IconButton aria-label="delete" onClick={() => removeItem(arrayHelpers, index)}>
-                    <Delete />
+                <ListItem key={item.internalId} alignItems="flex-start">
+                  <IconButton edge="start" aria-label="drag">
+                    <Reorder />
                   </IconButton>
-                </div>
+                  <ListItemText
+                    primary={item.name}
+                    secondary={
+                      <>
+                        <Typography
+                          display="inline"
+                          variant="body2"
+                          component="span"
+                        >
+                          {`${item.weight} g`}
+                        </Typography>
+                        {item.description && ` - ${item.description}`}
+                      </>
+                    }
+                  />
+                  <ListItemSecondaryAction>
+                    <IconButton
+                      edge="end"
+                      aria-label="delete"
+                      onClick={() => removeItem(arrayHelpers, index)}>
+                      <Delete />
+                    </IconButton>
+                  </ListItemSecondaryAction>
+                </ListItem>
               ))}
-            </div>
+            </>
           )}
         />
-      </Form>
+      </List>
     </div>
   );
 };

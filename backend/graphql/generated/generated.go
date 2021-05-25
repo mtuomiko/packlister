@@ -68,7 +68,7 @@ type ComplexityRoot struct {
 		CreatePacklist func(childComplexity int, input model.NewPacklist) int
 		CreateUser     func(childComplexity int, input model.NewUser) int
 		Login          func(childComplexity int, credentials model.LoginInput) int
-		UpdateState    func(childComplexity int, userItems []*model.UserItemInput, packlist *model.PacklistInput) int
+		UpdateState    func(childComplexity int, userItems []*model.UserItemInput, packlists []*model.PacklistInput) int
 	}
 
 	Packlist struct {
@@ -111,7 +111,7 @@ type MutationResolver interface {
 	CreatePacklist(ctx context.Context, input model.NewPacklist) (*model.Packlist, error)
 	CreateUser(ctx context.Context, input model.NewUser) (*model.User, error)
 	Login(ctx context.Context, credentials model.LoginInput) (*model.LoginResponse, error)
-	UpdateState(ctx context.Context, userItems []*model.UserItemInput, packlist *model.PacklistInput) (*model.UpdateResponse, error)
+	UpdateState(ctx context.Context, userItems []*model.UserItemInput, packlists []*model.PacklistInput) (*model.UpdateResponse, error)
 	ChangePassword(ctx context.Context, passwords *model.ChangePasswordInput) (*model.User, error)
 }
 type PacklistResolver interface {
@@ -259,7 +259,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateState(childComplexity, args["userItems"].([]*model.UserItemInput), args["packlist"].(*model.PacklistInput)), true
+		return e.complexity.Mutation.UpdateState(childComplexity, args["userItems"].([]*model.UserItemInput), args["packlists"].([]*model.PacklistInput)), true
 
 	case "Packlist.categories":
 		if e.complexity.Packlist.Categories == nil {
@@ -479,7 +479,7 @@ var sources = []*ast.Source{
   createPacklist(input: NewPacklist!): Packlist
   createUser(input: NewUser!): User
   login(credentials: LoginInput!): LoginResponse
-  updateState(userItems: [UserItemInput!]!, packlist: PacklistInput): UpdateResponse
+  updateState(userItems: [UserItemInput!]!, packlists: [PacklistInput!]!): UpdateResponse
   changePassword(passwords: ChangePasswordInput): User
 }
 
@@ -489,7 +489,7 @@ type UpdateResponse {
 	{Name: "graphql/schema/packlist.graphql", Input: `type Packlist {
   id: ID!
   name: String!
-  description: String
+  description: String!
   user: User!
   categories: [Category!]! @goField(forceResolver: true)
 }
@@ -666,15 +666,15 @@ func (ec *executionContext) field_Mutation_updateState_args(ctx context.Context,
 		}
 	}
 	args["userItems"] = arg0
-	var arg1 *model.PacklistInput
-	if tmp, ok := rawArgs["packlist"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("packlist"))
-		arg1, err = ec.unmarshalOPacklistInput2ᚖgithubᚗcomᚋmtuomikoᚋpacklisterᚋgraphqlᚋmodelᚐPacklistInput(ctx, tmp)
+	var arg1 []*model.PacklistInput
+	if tmp, ok := rawArgs["packlists"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("packlists"))
+		arg1, err = ec.unmarshalNPacklistInput2ᚕᚖgithubᚗcomᚋmtuomikoᚋpacklisterᚋgraphqlᚋmodelᚐPacklistInputᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["packlist"] = arg1
+	args["packlists"] = arg1
 	return args, nil
 }
 
@@ -1183,7 +1183,7 @@ func (ec *executionContext) _Mutation_updateState(ctx context.Context, field gra
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateState(rctx, args["userItems"].([]*model.UserItemInput), args["packlist"].(*model.PacklistInput))
+		return ec.resolvers.Mutation().UpdateState(rctx, args["userItems"].([]*model.UserItemInput), args["packlists"].([]*model.PacklistInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1331,11 +1331,14 @@ func (ec *executionContext) _Packlist_description(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Packlist_user(ctx context.Context, field graphql.CollectedField, obj *model.Packlist) (ret graphql.Marshaler) {
@@ -3538,6 +3541,9 @@ func (ec *executionContext) _Packlist(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "description":
 			out.Values[i] = ec._Packlist_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "user":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -4297,6 +4303,32 @@ func (ec *executionContext) marshalNPacklist2ᚖgithubᚗcomᚋmtuomikoᚋpackli
 	return ec._Packlist(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNPacklistInput2ᚕᚖgithubᚗcomᚋmtuomikoᚋpacklisterᚋgraphqlᚋmodelᚐPacklistInputᚄ(ctx context.Context, v interface{}) ([]*model.PacklistInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*model.PacklistInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNPacklistInput2ᚖgithubᚗcomᚋmtuomikoᚋpacklisterᚋgraphqlᚋmodelᚐPacklistInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNPacklistInput2ᚖgithubᚗcomᚋmtuomikoᚋpacklisterᚋgraphqlᚋmodelᚐPacklistInput(ctx context.Context, v interface{}) (*model.PacklistInput, error) {
+	res, err := ec.unmarshalInputPacklistInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4724,14 +4756,6 @@ func (ec *executionContext) marshalOPacklist2ᚖgithubᚗcomᚋmtuomikoᚋpackli
 		return graphql.Null
 	}
 	return ec._Packlist(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOPacklistInput2ᚖgithubᚗcomᚋmtuomikoᚋpacklisterᚋgraphqlᚋmodelᚐPacklistInput(ctx context.Context, v interface{}) (*model.PacklistInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputPacklistInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

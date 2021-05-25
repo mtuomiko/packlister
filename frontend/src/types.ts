@@ -26,8 +26,9 @@ export interface UserItem {
 }
 
 export interface UserState {
-  token: string;
-  id: string;
-  username: string;
-  email: string;
+  noLogin?: boolean;
+  token?: string;
+  id?: string;
+  username?: string;
+  email?: string;
 }

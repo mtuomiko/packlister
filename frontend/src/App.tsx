@@ -1,55 +1,36 @@
-import React, { useEffect, useState } from "react";
-import { Container, createMuiTheme, ThemeProvider, useMediaQuery, CssBaseline, AppBar, makeStyles, Box } from "@material-ui/core";
-import {
-  Switch,
-  Route,
-} from "react-router-dom";
-
+import React, { useState } from "react";
+import { useQuery, useReactiveVar } from "@apollo/client";
+import { Route, Switch } from "react-router-dom";
+import { userStorageVar } from "./cache";
+import { createMuiTheme, CssBaseline, ThemeProvider, useMediaQuery } from "@material-ui/core";
+import { Packlist, UserItem } from "./types";
+import { GET_INITIAL_STATE } from "./graphql/queries";
+import Home from "./components/Home";
+import ChangePasswordForm from "./components/ChangePasswordForm";
+import ExternalPacklist from "./components/ExternalPacklist";
+import LoggedIn from "./components/LoggedIn";
 import LoginForm from "./components/LoginForm";
 import RegisterForm from "./components/RegisterForm";
-import ExternalPacklist from "./components/ExternalPacklist";
-import Home from "./components/Home";
-import { useQuery } from "@apollo/client";
-import { GET_INITIAL_STATE } from "./graphql/queries";
-import { Packlist, UserItem, UserState } from "./types";
-import LoggedIn from "./components/LoggedIn";
-import DarkModeToggle from "./components/DarkModeToggle";
-import ChangePasswordForm from "./components/ChangePasswordForm";
+import NotLoggedIn from "./components/NotLoggedIn";
 
 export interface InitialStateResponse {
   getAuthorizedUser: {
+    id: string;
+    username: string;
+    email: string;
     packlists: Packlist[];
     userItems: UserItem[];
   };
 }
 
-const useStyles = makeStyles(theme => ({
-  bottomBar: {
-    top: "auto",
-    bottom: 0,
-  },
-}));
-
 const App = () => {
-  const [user, setUser] = useState<UserState>();
+  const user = useReactiveVar(userStorageVar);
   const [darkMode, setDarkMode] = useState(useMediaQuery("(prefers-color-scheme: dark)"));
-  const [currentPacklistId, setCurrentPacklistId] = useState<string>("");
-
-  useEffect(() => {
-    const userString = localStorage.getItem("packlister-user");
-    if (userString) {
-      setUser(JSON.parse(userString));
-    }
-  }, []);
 
   const initialStateQuery = useQuery<InitialStateResponse>(GET_INITIAL_STATE, {
-    skip: !user
+    skip: !user?.token,
   });
 
-  const logout = () => {
-    setUser(undefined);
-    localStorage.removeItem("packlister-user");
-  };
 
   const theme = React.useMemo(() =>
     createMuiTheme({
@@ -60,15 +41,12 @@ const App = () => {
     [darkMode]
   );
 
-  const classes = useStyles();
-
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Container>
-        <DarkModeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
-        {user &&
-          <div>
+      <>
+        {user?.token &&
+          <>
             <Switch>
               <Route path="/pack/:id">
                 <ExternalPacklist />
@@ -78,40 +56,32 @@ const App = () => {
               </Route>
               <Route path="/">
                 <LoggedIn
-                  logout={logout}
-                  user={user}
                   initialStateQuery={initialStateQuery}
-                  currentPacklistId={currentPacklistId}
-                  setCurrentPacklistId={setCurrentPacklistId}
                 />
               </Route>
             </Switch>
-          </div>
-        }
-        {!user &&
-          <>
-            <div>
-              <Switch>
-                <Route path="/pack/:id">
-                  <ExternalPacklist />
-                </Route>
-                <Route path="/register">
-                  <RegisterForm />
-                </Route>
-                <Route path="/login">
-                  <LoginForm setUser={setUser} />
-                </Route>
-                <Route path="/">
-                  <Home />
-                </Route>
-              </Switch>
-            </div>
-            <AppBar position="fixed" color="primary" className={classes.bottomBar}>
-              <Box margin={1}>Copyleft</Box>
-            </AppBar>
           </>
         }
-      </Container>
+        {!user?.token &&
+          <>
+            <Switch>
+              <Route path="/pack/:id">
+                <ExternalPacklist />
+              </Route>
+              <Route path="/register">
+                <RegisterForm />
+              </Route>
+              <Route path="/login">
+                <LoginForm />
+              </Route>
+              <Route path="/">
+                {!user?.noLogin && <Home />}
+                {user?.noLogin && <NotLoggedIn />}
+              </Route>
+            </Switch>
+          </>
+        }
+      </>
     </ThemeProvider>
   );
 };

@@ -1,9 +1,10 @@
-import { Box, Grid, IconButton, makeStyles, TextField } from "@material-ui/core";
-import { Delete, Reorder } from "@material-ui/icons";
-import { FieldArrayRenderProps, useFormikContext } from "formik";
 import React from "react";
+import { Box, Grid, IconButton, makeStyles } from "@material-ui/core";
+import { Delete, Reorder } from "@material-ui/icons";
+import { FastField, FieldArrayRenderProps, useFormikContext } from "formik";
 import { Draggable } from "react-beautiful-dnd";
 import { CategoryItem } from "../types";
+import FormTextField from "./FormTextField";
 import { UpdateStateInput } from "./LoggedIn";
 
 const useStyles = makeStyles((theme) => ({
@@ -17,18 +18,18 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 interface Props {
+  packlistIndex: number;
   item: CategoryItem;
   categoryIndex: number;
   itemIndex: number;
   itemArrayHelpers: FieldArrayRenderProps;
 }
 
-const PacklistFormItem = ({ item, categoryIndex, itemIndex, itemArrayHelpers }: Props) => {
+const PacklistFormItem = ({ packlistIndex, item, categoryIndex, itemIndex, itemArrayHelpers }: Props) => {
   const formikContext = useFormikContext<UpdateStateInput>();
 
   // Find which UserItem this item refers to
   const userItemIndex = formikContext.values.userItems.findIndex(i => i.internalId === item.userItemId);
-  const userItem = formikContext.values.userItems[userItemIndex];
 
   const classes = useStyles();
 
@@ -48,47 +49,39 @@ const PacklistFormItem = ({ item, categoryIndex, itemIndex, itemArrayHelpers }: 
             </Grid>
             <Grid item xs={4}>
               <Box paddingLeft={1}>
-                <TextField
+                <FastField
                   name={`userItems.${userItemIndex}.name`}
                   size="small"
-                  value={userItem.name}
+                  component={FormTextField}
                   placeholder="Name"
                   fullWidth
-                  onChange={formikContext.handleChange}
-                  onBlur={formikContext.handleBlur}
                 />
               </Box>
             </Grid>
             <Grid item xs={4}>
-              <TextField
+              <FastField
                 name={`userItems.${userItemIndex}.description`}
                 size="small"
-                value={userItem?.description}
+                component={FormTextField}
                 placeholder="Description"
                 fullWidth
-                onChange={formikContext.handleChange}
-                onBlur={formikContext.handleBlur}
               />
             </Grid>
             <Grid item xs={1}>
-              <TextField
+              <FastField
                 name={`userItems.${userItemIndex}.weight`}
                 size="small"
+                component={FormTextField}
                 type="number"
-                value={userItem?.weight}
                 fullWidth
-                onChange={formikContext.handleChange}
-                onBlur={formikContext.handleBlur}
               />
             </Grid>
             <Grid item xs={1}>
-              <TextField
+              <FastField
                 size="small"
-                name={`packlist.categories.${categoryIndex}.categoryItems.${itemIndex}.quantity`}
+                component={FormTextField}
+                name={`packlists.${packlistIndex}.categories.${categoryIndex}.categoryItems.${itemIndex}.quantity`}
                 type="number"
-                onChange={formikContext.handleChange}
-                onBlur={formikContext.handleBlur}
-                value={item.quantity}
                 fullWidth
               />
             </Grid>

@@ -2,7 +2,7 @@ type Mutation {
   createPacklist(input: NewPacklist!): Packlist
   createUser(input: NewUser!): User
   login(credentials: LoginInput!): LoginResponse
-  updateState(userItems: [UserItemInput!]!, packlist: PacklistInput): UpdateResponse
+  updateState(userItems: [UserItemInput!]!, packlists: [PacklistInput!]!): UpdateResponse
   changePassword(passwords: ChangePasswordInput): User
 }
 

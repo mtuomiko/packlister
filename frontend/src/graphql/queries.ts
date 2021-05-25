@@ -6,6 +6,8 @@ export const GET_INITIAL_STATE = gql`
   query getInitialState {
     getAuthorizedUser {
       id
+      username
+      email
       packlists {
         id
         name
