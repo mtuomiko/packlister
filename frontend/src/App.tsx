@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useQuery, useReactiveVar } from "@apollo/client";
 import { Route, Switch } from "react-router-dom";
 import { userStorageVar } from "./cache";
-import { createMuiTheme, CssBaseline, ThemeProvider, useMediaQuery } from "@material-ui/core";
+import { createMuiTheme, CssBaseline, ThemeProvider, useMediaQuery, unstable_createMuiStrictModeTheme } from "@material-ui/core";
 import { Packlist, UserItem } from "./types";
 import { GET_INITIAL_STATE } from "./graphql/queries";
 import Home from "./components/Home";
@@ -31,14 +31,16 @@ const App = () => {
     skip: !user?.token,
   });
 
-
+  // Material UI v4 transitions use findDOMNode which is deprecated in StrictMode
+  // Using unstable createMui allows StrictMode usage in development without warnings 
+  const createTheme = process.env.NODE_ENV === "production" ? createMuiTheme : unstable_createMuiStrictModeTheme;
   const theme = React.useMemo(() =>
-    createMuiTheme({
+    createTheme({
       palette: {
         type: darkMode ? "dark" : "light",
       },
     }),
-    [darkMode]
+    [darkMode, createTheme]
   );
 
   return (
