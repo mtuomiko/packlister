@@ -9,7 +9,7 @@ import { BrowserRouter } from "react-router-dom";
 import omitDeep from "./omitDeep";
 
 const graphqlUri = process.env.NODE_ENV === "production"
-  ? "/query"
+  ? "http://localhost:5000/query"
   : "http://localhost:5000/query";
 
 const httpLink = new HttpLink({ uri: graphqlUri });

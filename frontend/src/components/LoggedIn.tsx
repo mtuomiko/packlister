@@ -1,7 +1,6 @@
 import React from "react";
 import { Packlist, UserItem } from "../types";
 import { ApolloCache, OperationVariables, QueryResult, useMutation } from "@apollo/client";
-import { Formik } from "formik";
 import { UPDATE_STATE } from "../graphql/mutations";
 import { GET_INITIAL_STATE } from "../graphql/queries";
 import { InitialStateResponse } from "../App";
@@ -57,30 +56,34 @@ const LoggedIn = ({ initialStateQuery }: LoggedInProps) => {
     });
   };
 
-  const handleSubmit = async (values: UpdateStateInput) => {
-    try {
-      await updateState({
-        variables: { userItems: values.userItems, packlists: values.packlists },
-        update: store => mutationCacheUpdate(store, values),
-      }
-      );
-    } catch (e) {
-      console.log(e);
-    }
-  };
+  // const handleSubmit = async (values: UpdateStateInput) => {
+  //   try {
+  //     await updateState({
+  //       variables: { userItems: values.userItems, packlists: values.packlists },
+  //       update: store => mutationCacheUpdate(store, values),
+  //     }
+  //     );
+  //   } catch (e) {
+  //     console.log(e);
+  //   }
+  // };
 
   return (
-    <Formik
-      key="outerFormik"
-      validateOnChange={false}
-      validateOnBlur={false}
-      initialValues={{ userItems, packlists }}
-      onSubmit={handleSubmit}
-    >
-      {formikProps => (
-        <MainDisplay />
-      )}
-    </Formik>
+    // <Formik
+    //   key="outerFormik"
+    //   validateOnChange={false}
+    //   validateOnBlur={false}
+    //   initialValues={{ userItems, packlists }}
+    //   onSubmit={handleSubmit}
+    // >
+    //   {formikProps => (
+    //     <MainDisplay />
+    //   )}
+    // </Formik>
+    <MainDisplay
+      userItems={userItems}
+      packlists={packlists}
+    />
   );
 };
 
